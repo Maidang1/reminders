@@ -11,10 +11,11 @@ function App() {
           console.log('send notification');
           sendNotification({
             title: 'hello',
+            body: 'this is a notification',
           });
         }}
       >
-        send notificator{' '}
+        send notification
       </button>
     </div>
   );

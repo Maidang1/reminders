@@ -6,5 +6,5 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["rsbuild.config.ts"]
+  "include": ["vite.config.ts"]
 }
