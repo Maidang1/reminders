@@ -8,11 +8,15 @@ function App() {
     <div className='flex'>
       <button
         onClick={() => {
-          console.log('send notification');
-          sendNotification({
-            title: 'hello',
-            body: 'this is a notification',
-          });
+          try {
+            console.log('send notification');
+            sendNotification({
+              title: 'hello',
+              body: 'this is a notification',
+            });
+          } catch (error) {
+            console.error('Failed to send notification:', error);
+          }
         }}
       >
         send notification
