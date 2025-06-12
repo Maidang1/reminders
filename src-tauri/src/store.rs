@@ -1,7 +1,8 @@
-use serde::{Deserialize, Serialize};
-use serde_json::json;
 use std::sync::Mutex;
-use tauri_plugin_store::{Store, StoreExt};
+use serde::{Deserialize, Serialize};
+use tauri::State;
+
+use crate::AppState;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReminderGroup {
@@ -26,26 +27,20 @@ pub struct Reminder {
 }
 
 #[tauri::command]
-pub async fn get_groups<R: tauri::Runtime>(
-    app_handle: tauri::AppHandle<R>,
-) -> Result<Vec<ReminderGroup>, String> {
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-
-    let groups: Vec<ReminderGroup> = store
-        .get("groups")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
+pub async fn get_groups(state: State<'_, Mutex<AppState>>) -> Result<Vec<ReminderGroup>, String> {
+    let state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    let groups = state.groups.clone();
 
     Ok(groups)
 }
 
 #[tauri::command]
-pub async fn create_group<R: tauri::Runtime>(
+pub async fn create_group(
     name: String,
     color: String,
-    app_handle: tauri::AppHandle<R>,
+    state: State<'_, Mutex<AppState>>,
 ) -> Result<ReminderGroup, String> {
     let group = ReminderGroup {
         id: uuid::Uuid::new_v4().to_string(),
@@ -54,42 +49,32 @@ pub async fn create_group<R: tauri::Runtime>(
         created_at: chrono::Utc::now().timestamp(),
     };
 
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-    let mut groups: Vec<ReminderGroup> = store
-        .get("groups")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
-    groups.push(group.clone());
-    store.set("groups", json!(groups));
+    let mut state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    state.groups.push(group.clone());
+
     Ok(group)
 }
 
 #[tauri::command]
-pub async fn get_reminders<R: tauri::Runtime>(
-    app_handle: tauri::AppHandle<R>,
-) -> Result<Vec<Reminder>, String> {
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-
-    let reminders: Vec<Reminder> = store
-        .get("reminders")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
+pub async fn get_reminders(state: State<'_, Mutex<AppState>>) -> Result<Vec<Reminder>, String> {
+    let state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
+    let reminders = state.reminders.clone();
 
     Ok(reminders)
 }
 
 #[tauri::command]
-pub async fn create_reminder<R: tauri::Runtime>(
+pub async fn create_reminder(
     title: String,
     color: String,
     group_id: String,
     repeat_interval: u64,
     repeat_duration: u64,
-    app_handle: tauri::AppHandle<R>,
+    state: State<'_, Mutex<AppState>>,
 ) -> Result<Reminder, String> {
     let now = chrono::Utc::now().timestamp();
     let reminder = Reminder {
@@ -105,34 +90,24 @@ pub async fn create_reminder<R: tauri::Runtime>(
         next_trigger: now + repeat_interval as i64,
     };
 
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-    let mut reminders: Vec<Reminder> = store
-        .get("reminders")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
-    reminders.push(reminder.clone());
-    store.set("reminders", json!(reminders));
+    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    state.reminders.push(reminder.clone());
+
+    println!("Created reminder: {:?} {:?}", reminder, state.reminders);
     Ok(reminder)
 }
 
 #[tauri::command]
-pub async fn cancel_reminder<R: tauri::Runtime>(
+pub async fn cancel_reminder(
     reminder_id: String,
-    app_handle: tauri::AppHandle<R>,
+    state: State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-    let mut reminders: Vec<Reminder> = store
-        .get("reminders")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
+    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    let mut reminders = state.reminders.clone();
 
     if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
         reminder.is_cancelled = true;
-        store.set("reminders", json!(reminders));
+        state.reminders = reminders;
         Ok(())
     } else {
         Err("Reminder not found".to_string())
@@ -140,28 +115,12 @@ pub async fn cancel_reminder<R: tauri::Runtime>(
 }
 
 #[tauri::command]
-pub async fn delete_group<R: tauri::Runtime>(
+pub async fn delete_group(
     group_id: String,
-    app_handle: tauri::AppHandle<R>,
+    state: State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
-    let store = app_handle
-        .store("reminders.json")
-        .map_err(|e| format!("Failed to access store: {}", e))?;
-    let mut groups: Vec<ReminderGroup> = store
-        .get("groups")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
-    let mut reminders: Vec<Reminder> = store
-        .get("reminders")
-        .and_then(|value| serde_json::from_value(value).ok())
-        .unwrap_or_default();
-
-    groups.retain(|g| g.id != group_id);
-    reminders.retain(|r| r.group_id != group_id);
-
-    store.set("groups", json!(groups));
-
-    store.set("reminders", json!(reminders));
-
+    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    state.groups.retain(|g| g.id != group_id);
+    state.reminders.retain(|r| r.group_id != group_id);
     Ok(())
 }
