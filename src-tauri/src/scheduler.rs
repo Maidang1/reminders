@@ -1,6 +1,6 @@
 use crate::store::Reminder;
 use english_to_cron::str_cron_syntax;
-use job_scheduler::{Job, JobScheduler};
+use job_scheduler_ng::{Job, JobScheduler};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::{Arc, Mutex};
@@ -9,7 +9,6 @@ use tauri_plugin_notification::NotificationExt;
 
 extern crate uuid;
 
-// 为 JobScheduler 创建一个包装器，实现 Send + Sync
 pub struct SendSyncJobScheduler {
     scheduler: JobScheduler<'static>,
 }
@@ -30,7 +29,7 @@ impl SendSyncJobScheduler {
     }
 
     fn tick(&mut self) {
-        self.scheduler.tick()
+        self.scheduler.tick();
     }
 }
 impl Debug for SendSyncJobScheduler {
@@ -69,7 +68,7 @@ impl ReminderScheduler {
 
         // 创建定时任务
         let cron_expr = str_cron_syntax(&cron_expression)
-            .map_err(|e| format!("Invalid cron expression: {}", e))?;
+            .map_err(|e| format!("Invalid cron expression2: {}", e))?;
 
         let app_handle = self.app_handle.clone();
         let title_clone = reminder_title.clone();
@@ -77,7 +76,7 @@ impl ReminderScheduler {
         let job = Job::new(
             cron_expr
                 .parse()
-                .map_err(|e| format!("Invalid cron expression: {}", e))?,
+                .map_err(|e| format!("Invalid cron expression1: {}", e))?,
             move || {
                 if let Err(e) =
                     ReminderScheduler::send_notification_sync_internal(&app_handle, &title_clone)
@@ -166,7 +165,7 @@ impl ReminderScheduler {
             if let Ok(mut sched) = scheduler.lock() {
                 sched.tick();
             }
-            std::thread::sleep(std::time::Duration::from_secs(500));
+            std::thread::sleep(std::time::Duration::from_millis(500));
         });
     }
 }
