@@ -50,7 +50,7 @@ export default function AnimatedGridPattern({
       {Array.from({ length: numSquares }, (_, i) => (
         <motion.div
           key={i}
-          className="absolute h-8 w-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-sm"
+          className="absolute h-8 w-8 bg-gradient-to-r from-slate-300 to-slate-400 rounded-sm"
           style={{
             top: `${Math.random() * 100}%`,
             left: `${Math.random() * 100}%`,

@@ -96,7 +96,7 @@ function App() {
           <motion.div 
             animate={{ rotate: 360 }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-            className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
+            className="w-12 h-12 border-3 border-slate-400 border-t-transparent rounded-full mx-auto mb-4"
           />
           <div className="text-lg font-semibold text-white mb-2">加载中...</div>
           <div className="text-sm text-gray-400">正在获取您的提醒数据</div>

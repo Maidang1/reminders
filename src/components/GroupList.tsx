@@ -57,7 +57,7 @@ export const GroupList: React.FC<GroupListProps> = ({
           }
           label="Today"
           count={1}
-          bgColor="bg-blue-500"
+          bgColor="bg-slate-400"
           isSelected={selectedGroupId === null}
           onClick={() => onSelectGroup(null)}
           animationDelay={0}

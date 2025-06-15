@@ -1,6 +1,6 @@
 export const COLOR_OPTIONS = [
-  '#007AFF', '#34C759', '#FF9500', '#FF3B30', 
-  '#AF52DE', '#FF2D92', '#5AC8FA', '#FFCC00'
+  '#6B9BD2', '#8FBC8F', '#DEB887', '#CD919E', 
+  '#B19CD9', '#F4A7B9', '#87CEEB', '#F0E68C'
 ] as const;
 
 export const INTERVAL_OPTIONS = [

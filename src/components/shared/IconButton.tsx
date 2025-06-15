@@ -15,7 +15,7 @@ export const IconButton: React.FC<IconButtonProps> = ({
 }) => {
   const baseClasses = 'p-1 rounded transition-colors duration-200';
   const variantClasses = {
-    primary: 'text-blue-400 hover:text-blue-500',
+    primary: 'text-slate-500 hover:text-slate-600',
     secondary: 'text-gray-400 hover:text-gray-300',
     danger: 'text-red-400 hover:text-red-500'
   };
