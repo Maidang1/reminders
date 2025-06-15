@@ -25,8 +25,8 @@ export const useReminderAPI = () => {
     return await invoke('create_reminder', {
       title: data.title,
       color: data.color,
-      group_id: data.group_id,
-      cron_expression: data.cron_expression,
+      groupId: data.group_id,
+      cronExpression: data.cron_expression,
       description: data.description,
     });
   };

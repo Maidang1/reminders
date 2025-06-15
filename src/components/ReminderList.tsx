@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
 import { Reminder, ReminderGroup, CreateReminderData } from '../types';
 import { ReminderHeader } from './ReminderList/ReminderHeader';
-import { TimeSection } from './ReminderList/TimeSection';
-import { ReminderItem } from './ReminderList/ReminderItem';
 import { QuickAddForm } from './ReminderList/QuickAddForm';
 import { DetailedAddForm } from './ReminderList/DetailedAddForm';
 import { COLOR_OPTIONS } from '../constants/options';
-import { useFormatters } from '../hooks/useFormatters';
 import { useFormState } from '../hooks/useFormState';
 
 interface ReminderListProps {
@@ -18,16 +15,13 @@ interface ReminderListProps {
 }
 
 export const ReminderList: React.FC<ReminderListProps> = ({
-  reminders,
   groups,
   selectedGroupId,
   onCreateReminder,
-  onCancelReminder,
+  reminders
 }) => {
   const [newReminderTitle, setNewReminderTitle] = useState('');
   const [showDetails, setShowDetails] = useState(false);
-  
-  const { formatDate } = useFormatters();
   
   const { formData, updateFormData, resetForm } = useFormState({
     title: '',
@@ -37,13 +31,7 @@ export const ReminderList: React.FC<ReminderListProps> = ({
     description: '',
   });
 
-  const filteredReminders = selectedGroupId
-    ? reminders.filter(r => r.group_id === selectedGroupId)
-    : reminders;
-
-  const getGroupName = (groupId: string) => {
-    return groups.find(g => g.id === groupId)?.name || '未知分组';
-  };
+  const selectedGroup = groups.find(g => g.id === selectedGroupId);
 
   const handleQuickAdd = () => {
     if (newReminderTitle.trim() && (selectedGroupId || groups[0]?.id)) {
@@ -89,26 +77,6 @@ export const ReminderList: React.FC<ReminderListProps> = ({
     });
   };
 
-  const groupRemindersByTime = (reminders: Reminder[]) => {
-    return {
-      morning: reminders.filter(r => {
-        const reminderDate = new Date(r.start_at * 1000);
-        return reminderDate.getHours() < 12;
-      }),
-      afternoon: reminders.filter(r => {
-        const reminderDate = new Date(r.start_at * 1000);
-        return reminderDate.getHours() >= 12 && reminderDate.getHours() < 17;
-      }),
-      tonight: reminders.filter(r => {
-        const reminderDate = new Date(r.start_at * 1000);
-        return reminderDate.getHours() >= 17;
-      })
-    };
-  };
-
-  const selectedTimeGroups = groupRemindersByTime(filteredReminders);
-  const selectedGroup = groups.find(g => g.id === selectedGroupId);
-
   return (
     <div className="flex-1 apple-main-content apple-scrollbar overflow-y-auto">
       <div className="p-6">
@@ -117,78 +85,72 @@ export const ReminderList: React.FC<ReminderListProps> = ({
           selectedGroupId={selectedGroupId}
           selectedGroup={selectedGroup}
         />
+        {
+          reminders.map((reminder) => (
+            <div key={reminder.id} className="mb-4">
+              <div className="flex items-center">
+                <div
+                  className="w-3 h-3 rounded-full mr-2"
+                  style={{ backgroundColor: reminder.color }}
+                />
+                <div className="flex-1">
+                  <div className="font-semibold">{reminder.title}</div>
+                  <div className="text-sm text-gray-500">
+                    {reminder.description}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        }
 
-        {/* Time Sections for Today view */}
+        {/* 未选择组时显示欢迎界面 */}
         {!selectedGroupId && (
-          <div className="space-y-8">
-            <TimeSection
-              title="Morning"
-              reminders={selectedTimeGroups.morning}
-              onCancelReminder={onCancelReminder}
-              getGroupName={getGroupName}
-              formatDate={formatDate}
-            />
-            
-            <TimeSection
-              title="Afternoon"
-              reminders={selectedTimeGroups.afternoon}
-              onCancelReminder={onCancelReminder}
-              getGroupName={getGroupName}
-              formatDate={formatDate}
-            />
-            
-            <TimeSection
-              title="Tonight"
-              reminders={selectedTimeGroups.tonight}
-              onCancelReminder={onCancelReminder}
-              getGroupName={getGroupName}
-              formatDate={formatDate}
-            />
+          <div className="flex flex-col items-center justify-center h-96 text-center">
+            <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-2">欢迎使用提醒助手</h2>
+            <p className="text-gray-500 mb-6">选择左侧的列表开始创建提醒事项</p>
+            <div className="text-sm text-gray-400">
+              或者创建一个新的列表来组织您的提醒
+            </div>
           </div>
         )}
 
-        {/* Selected Group Reminders */}
+        {/* 选择组时显示创建表单 */}
         {selectedGroupId && (
-          <div className="space-y-3">
-            {filteredReminders.map((reminder) => (
-              <ReminderItem
-                key={reminder.id}
-                reminder={reminder}
-                onCancel={onCancelReminder}
-                getGroupName={getGroupName}
-                formatDate={formatDate}
-                showGroupName={false}
-              />
-            ))}
+          <div className="space-y-6">
+            {/* Quick Add Form */}
+            <QuickAddForm
+              value={newReminderTitle}
+              onChange={setNewReminderTitle}
+              onSubmit={handleQuickAdd}
+            />
+
+            {/* Detailed Add Form */}
+            <DetailedAddForm
+              isVisible={showDetails}
+              formData={formData}
+              groups={groups}
+              colorOptions={COLOR_OPTIONS}
+              onFormDataChange={updateFormData}
+              onSubmit={handleDetailedAdd}
+              onCancel={handleCancelDetailed}
+            />
+
+            {/* Add Details Button */}
+            {!showDetails && (
+              <button
+                onClick={() => setShowDetails(true)}
+                className="apple-button apple-button-secondary w-full"
+              >
+                添加详细设置
+              </button>
+            )}
           </div>
-        )}
-
-        {/* Quick Add Form */}
-        <QuickAddForm
-          value={newReminderTitle}
-          onChange={setNewReminderTitle}
-          onSubmit={handleQuickAdd}
-        />
-
-        {/* Detailed Add Form */}
-        <DetailedAddForm
-          isVisible={showDetails}
-          formData={formData}
-          groups={groups}
-          colorOptions={COLOR_OPTIONS}
-          onFormDataChange={updateFormData}
-          onSubmit={handleDetailedAdd}
-          onCancel={handleCancelDetailed}
-        />
-
-        {/* Add Details Button */}
-        {!showDetails && (
-          <button
-            onClick={() => setShowDetails(true)}
-            className="mt-4 apple-button apple-button-secondary w-full"
-          >
-            添加详细设置
-          </button>
         )}
       </div>
     </div>

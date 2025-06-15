@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ReminderGroup } from '../types';
+import { ReminderGroup, Reminder } from '../types';
 import { SearchBox } from './shared/SearchBox';
 import { SmartListItem } from './GroupList/SmartListItem';
 import { MyListsSection } from './GroupList/MyListsSection';
@@ -7,6 +7,7 @@ import { CreateGroupForm } from './GroupList/CreateGroupForm';
 import { AddListButton } from './GroupList/AddListButton';
 import { COLOR_OPTIONS } from '../constants/options';
 import { useFormState } from '../hooks/useFormState';
+import { useFormatters } from '../hooks/useFormatters';
 
 interface GroupListProps {
   groups: ReminderGroup[];
@@ -14,6 +15,8 @@ interface GroupListProps {
   onSelectGroup: (groupId: string | null) => void;
   onCreateGroup: (name: string, color: string) => void;
   onDeleteGroup: (groupId: string) => void;
+  reminders: Reminder[];
+  onCancelReminder: (reminderId: string) => void;
 }
 
 export const GroupList: React.FC<GroupListProps> = ({
@@ -22,12 +25,16 @@ export const GroupList: React.FC<GroupListProps> = ({
   onSelectGroup,
   onCreateGroup,
   onDeleteGroup,
+  reminders,
+  onCancelReminder,
 }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const { formData, updateField, resetForm } = useFormState({
     name: '',
     color: COLOR_OPTIONS[0]
   });
+  
+  const { formatDate } = useFormatters();
 
   const handleCreateGroup = () => {
     if (formData.name.trim()) {
@@ -122,7 +129,52 @@ export const GroupList: React.FC<GroupListProps> = ({
         selectedGroupId={selectedGroupId}
         onSelectGroup={onSelectGroup}
         onDeleteGroup={onDeleteGroup}
+        reminders={reminders}
       />
+
+      {/* Selected Group Reminders */}
+      {selectedGroupId && (
+        <div className="mx-4 mb-4">
+          <div className="text-xs text-gray-400 mb-2 uppercase tracking-wide">
+            提醒事项
+          </div>
+          <div className="space-y-2">
+            {reminders
+              .filter(r => r.group_id === selectedGroupId && !r.is_deleted)
+              .map((reminder) => (
+                <div
+                  key={reminder.id}
+                  className="apple-reminder-item p-2 text-sm"
+                >
+                  <div 
+                    className="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                    style={{ backgroundColor: reminder.color }}
+                  />
+                  <div className="flex-1">
+                    <div className="apple-reminder-title text-xs">{reminder.title}</div>
+                    {reminder.description && (
+                      <div className="text-xs text-gray-400 mt-1">{reminder.description}</div>
+                    )}
+                    <div className="text-xs text-gray-500 mt-1">
+                      {formatDate(reminder.start_at)}
+                      {reminder.cron_expression && ` • ${reminder.cron_expression}`}
+                      {reminder.is_cancelled && ' • 已取消'}
+                      {reminder.is_paused && ' • 已暂停'}
+                    </div>
+                  </div>
+                  {!reminder.is_cancelled && (
+                    <button
+                      onClick={() => onCancelReminder(reminder.id)}
+                      className="text-red-400 hover:text-red-600 text-xs ml-2"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Create Group Form */}
       <CreateGroupForm
