@@ -1,18 +1,18 @@
 mod scheduler;
 mod store;
 
-use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
+use crate::scheduler::ReminderScheduler;
+use crate::store::*;
+use std::sync::RwLock;
+use std::sync::{Arc, Mutex};
 use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
-use crate::scheduler::ReminderScheduler;
-use crate::store::*;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone)]
 pub struct AppState {
-    groups: Vec<ReminderGroup>,
-    reminders: Vec<Reminder>,
+    pub groups: Vec<ReminderGroup>,
+    pub reminders: Vec<Reminder>,
+    pub reminder_scheduler: Arc<RwLock<ReminderScheduler>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -32,25 +32,39 @@ pub fn run() {
                 .get("reminders")
                 .and_then(|value| serde_json::from_value(value).ok())
                 .unwrap_or_default();
-            
-            app.manage(Mutex::new(AppState { 
-                groups, 
-                reminders: reminders.clone(),
-            }));
+
+            let app_handle = app.handle();
 
             // 初始化调度器
-            let reminder_scheduler = ReminderScheduler::new();
-            reminder_scheduler.start_scheduler(); // 启动调度器
-            app.manage(reminder_scheduler.clone());
+            let reminder_scheduler =
+                Arc::new(RwLock::new(ReminderScheduler::new(app_handle.clone())));
+            let scheduler = reminder_scheduler.read().unwrap();
+            scheduler.start_scheduler(); // 启动调度器
 
-            // 在后台任务中恢复提醒任务
-            let app_handle = app.handle().clone();
+            let app_state = AppState {
+                groups,
+                reminders: reminders.clone(),
+                reminder_scheduler: Arc::clone(&reminder_scheduler),
+            };
+
+            app.manage(Mutex::new(app_state));
+
+            // 保存提醒数据的引用，稍后恢复任务
+            let scheduler_clone = Arc::clone(&reminder_scheduler);
+            let reminders_clone = reminders.clone();
+
+            // 使用独立线程在应用完全初始化后恢复任务
             std::thread::spawn(move || {
-                // 使用 tokio runtime 来运行异步代码
+                std::thread::sleep(std::time::Duration::from_millis(100)); // 给应用时间完成初始化
+
                 let rt = tokio::runtime::Runtime::new().unwrap();
                 rt.block_on(async {
-                    if let Err(e) = reminder_scheduler.restore_reminder_jobs(&reminders, app_handle).await {
-                        eprintln!("Failed to restore reminder jobs: {}", e);
+                    if let Ok(mut scheduler) = scheduler_clone.write() {
+                        if let Err(e) = scheduler.restore_reminder_jobs(&reminders_clone).await {
+                            eprintln!("Failed to restore reminder jobs: {}", e);
+                        } else {
+                            println!("Successfully restored reminder jobs");
+                        }
                     }
                 });
             });
@@ -68,9 +82,11 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 let app_state = window.state::<Mutex<AppState>>();
-                let state = app_state.lock().unwrap();
-                let groups = state.groups.clone();
-                let reminders = state.reminders.clone();
+                let state_guard = app_state.lock().unwrap();
+                let groups = state_guard.groups.clone();
+                let reminders = state_guard.reminders.clone();
+                drop(state_guard); // Release the lock before doing I/O
+
                 let app_handle = window.app_handle();
                 let store = app_handle
                     .store("reminders.json")
@@ -80,8 +96,6 @@ pub fn run() {
                 let _ = store.set("reminders", serde_json::to_value(reminders).unwrap());
                 // Commit the changes to the store
                 store.save().expect("Failed to save store");
-                // Save the current state to the store
-                // let _ = window.store("reminders.json", &*state);
             }
         })
         .run(tauri::generate_context!())

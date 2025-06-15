@@ -96,6 +96,20 @@ pub async fn create_reminder(
         .lock()
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     state.reminders.push(reminder.clone());
+    
+    // 在一个新的线程中添加提醒任务
+    let scheduler = state.reminder_scheduler.clone();
+    let reminder_for_job = reminder.clone();
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(async {
+            if let Ok(mut scheduler_guard) = scheduler.write() {
+                if let Err(e) = scheduler_guard.add_reminder_job(&reminder_for_job).await {
+                    eprintln!("Failed to add reminder job: {}", e);
+                }
+            }
+        });
+    });
 
     println!("Created reminder: {:?} {:?}", reminder, state.reminders);
     Ok(reminder)
@@ -111,9 +125,16 @@ pub async fn cancel_reminder(
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     let mut reminders = state.reminders.clone();
 
+
+
+
+
     if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
         reminder.is_cancelled = true;
         state.reminders = reminders;
+
+        state.reminder_scheduler.write().unwrap().remove_reminder_job(reminder_id.as_str()).map_err(|e| format!("Failed to remove reminder job: {}", e))?;
+
         Ok(())
     } else {
         Err("Reminder not found".to_string())
@@ -130,5 +151,15 @@ pub async fn delete_group(
         .map_err(|e| format!("Failed to lock state: {}", e))?;
     state.groups.retain(|g| g.id != group_id);
     state.reminders.retain(|r| r.group_id != group_id);
+    let reminder_ids = state.reminders.iter()
+        .filter(|r| r.group_id == group_id)
+        .map(|r| r.id.clone())
+        .collect::<Vec<_>>();
+    for reminder_id in reminder_ids {
+        state.reminder_scheduler.write().unwrap().remove_reminder_job(reminder_id.as_str()).map_err(|e| format!("Failed to remove reminder job: {}", e))?;
+    }
+    println!("Deleted group with ID: {}", group_id);
+
+
     Ok(())
 }
