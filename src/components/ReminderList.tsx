@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { Reminder, ReminderGroup, CreateReminderData } from '../types';
-import { motion } from 'motion/react';
 import { ReminderHeader } from './ReminderList/ReminderHeader';
 import { TimeSection } from './ReminderList/TimeSection';
 import { ReminderItem } from './ReminderList/ReminderItem';
 import { QuickAddForm } from './ReminderList/QuickAddForm';
 import { DetailedAddForm } from './ReminderList/DetailedAddForm';
-import { COLOR_OPTIONS, INTERVAL_OPTIONS } from '../constants/options';
+import { COLOR_OPTIONS } from '../constants/options';
 import { useFormatters } from '../hooks/useFormatters';
 import { useFormState } from '../hooks/useFormState';
 
@@ -28,14 +27,14 @@ export const ReminderList: React.FC<ReminderListProps> = ({
   const [newReminderTitle, setNewReminderTitle] = useState('');
   const [showDetails, setShowDetails] = useState(false);
   
-  const { formatTime, formatDate } = useFormatters();
+  const { formatDate } = useFormatters();
   
   const { formData, updateFormData, resetForm } = useFormState({
     title: '',
     color: COLOR_OPTIONS[0],
     group_id: selectedGroupId || (groups[0]?.id || ''),
-    repeat_interval: 300,
-    repeat_duration: 86400,
+    cron_expression: '',
+    description: '',
   });
 
   const filteredReminders = selectedGroupId
@@ -52,8 +51,8 @@ export const ReminderList: React.FC<ReminderListProps> = ({
         title: newReminderTitle.trim(),
         color: COLOR_OPTIONS[0],
         group_id: selectedGroupId || groups[0].id,
-        repeat_interval: 300,
-        repeat_duration: 86400,
+        cron_expression: undefined,
+        description: undefined,
       });
       setNewReminderTitle('');
     }
@@ -65,15 +64,15 @@ export const ReminderList: React.FC<ReminderListProps> = ({
         title: formData.title.trim(),
         color: formData.color,
         group_id: formData.group_id,
-        repeat_interval: formData.repeat_interval,
-        repeat_duration: formData.repeat_duration,
+        cron_expression: formData.cron_expression || undefined,
+        description: formData.description || undefined,
       });
       resetForm({
         title: '',
         color: COLOR_OPTIONS[0],
         group_id: selectedGroupId || (groups[0]?.id || ''),
-        repeat_interval: 300,
-        repeat_duration: 86400,
+        cron_expression: '',
+        description: '',
       });
       setShowDetails(false);
     }
@@ -85,23 +84,23 @@ export const ReminderList: React.FC<ReminderListProps> = ({
       title: '',
       color: COLOR_OPTIONS[0],
       group_id: selectedGroupId || (groups[0]?.id || ''),
-      repeat_interval: 300,
-      repeat_duration: 86400,
+      cron_expression: '',
+      description: '',
     });
   };
 
   const groupRemindersByTime = (reminders: Reminder[]) => {
     return {
       morning: reminders.filter(r => {
-        const reminderDate = new Date(r.created_at * 1000);
+        const reminderDate = new Date(r.start_at * 1000);
         return reminderDate.getHours() < 12;
       }),
       afternoon: reminders.filter(r => {
-        const reminderDate = new Date(r.created_at * 1000);
+        const reminderDate = new Date(r.start_at * 1000);
         return reminderDate.getHours() >= 12 && reminderDate.getHours() < 17;
       }),
       tonight: reminders.filter(r => {
-        const reminderDate = new Date(r.created_at * 1000);
+        const reminderDate = new Date(r.start_at * 1000);
         return reminderDate.getHours() >= 17;
       })
     };
@@ -128,7 +127,6 @@ export const ReminderList: React.FC<ReminderListProps> = ({
               onCancelReminder={onCancelReminder}
               getGroupName={getGroupName}
               formatDate={formatDate}
-              animationDelay={0.2}
             />
             
             <TimeSection
@@ -137,7 +135,6 @@ export const ReminderList: React.FC<ReminderListProps> = ({
               onCancelReminder={onCancelReminder}
               getGroupName={getGroupName}
               formatDate={formatDate}
-              animationDelay={0.3}
             />
             
             <TimeSection
@@ -146,32 +143,24 @@ export const ReminderList: React.FC<ReminderListProps> = ({
               onCancelReminder={onCancelReminder}
               getGroupName={getGroupName}
               formatDate={formatDate}
-              animationDelay={0.4}
             />
           </div>
         )}
 
         {/* Selected Group Reminders */}
         {selectedGroupId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-3"
-          >
-            {filteredReminders.map((reminder, index) => (
+          <div className="space-y-3">
+            {filteredReminders.map((reminder) => (
               <ReminderItem
                 key={reminder.id}
                 reminder={reminder}
                 onCancel={onCancelReminder}
                 getGroupName={getGroupName}
                 formatDate={formatDate}
-                formatTime={formatTime}
                 showGroupName={false}
-                animationDelay={index * 0.1}
               />
             ))}
-          </motion.div>
+          </div>
         )}
 
         {/* Quick Add Form */}
@@ -187,7 +176,6 @@ export const ReminderList: React.FC<ReminderListProps> = ({
           formData={formData}
           groups={groups}
           colorOptions={COLOR_OPTIONS}
-          intervalOptions={INTERVAL_OPTIONS}
           onFormDataChange={updateFormData}
           onSubmit={handleDetailedAdd}
           onCancel={handleCancelDetailed}
@@ -195,14 +183,12 @@ export const ReminderList: React.FC<ReminderListProps> = ({
 
         {/* Add Details Button */}
         {!showDetails && (
-          <motion.button
+          <button
             onClick={() => setShowDetails(true)}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
             className="mt-4 apple-button apple-button-secondary w-full"
           >
             添加详细设置
-          </motion.button>
+          </button>
         )}
       </div>
     </div>

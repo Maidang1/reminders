@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 
 interface QuickAddFormProps {
   value: string;
@@ -13,12 +12,7 @@ export const QuickAddForm: React.FC<QuickAddFormProps> = ({
   onSubmit
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.5 }}
-      className="mt-8"
-    >
+    <div className="mt-8">
       <div className="flex items-center gap-3 apple-form-container">
         <div className="w-5 h-5 border-2 border-gray-500 rounded-full flex-shrink-0"></div>
         <input
@@ -70,6 +64,6 @@ export const QuickAddForm: React.FC<QuickAddFormProps> = ({
           </svg>
         </button>
       </div>
-    </motion.div>
+    </div>
   );
 };

@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { ReminderGroup } from '../../types';
 import { Badge } from '../shared/Badge';
 import { IconButton } from '../shared/IconButton';
@@ -9,7 +8,6 @@ interface GroupItemProps {
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
-  animationDelay?: number;
   reminderCount?: number;
 }
 
@@ -18,16 +16,10 @@ export const GroupItem: React.FC<GroupItemProps> = ({
   isSelected,
   onSelect,
   onDelete,
-  animationDelay = 0,
   reminderCount = 1
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, delay: animationDelay }}
-      className="relative group"
-    >
+    <div className="relative group">
       <button
         onClick={onSelect}
         className={`apple-sidebar-item ${isSelected ? 'selected' : ''}`}
@@ -49,13 +41,13 @@ export const GroupItem: React.FC<GroupItemProps> = ({
       <IconButton
         onClick={onDelete}
         variant="danger"
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100"
         icon={
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         }
       />
-    </motion.div>
+    </div>
   );
 };

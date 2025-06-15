@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'motion/react';
 import { Reminder } from '../../types';
 import { IconButton } from '../shared/IconButton';
 
@@ -8,9 +7,7 @@ interface ReminderItemProps {
   onCancel: (reminderId: string) => void;
   getGroupName: (groupId: string) => string;
   formatDate: (timestamp: number) => string;
-  formatTime?: (seconds: number) => string;
   showGroupName?: boolean;
-  animationDelay?: number;
 }
 
 export const ReminderItem: React.FC<ReminderItemProps> = ({
@@ -18,17 +15,10 @@ export const ReminderItem: React.FC<ReminderItemProps> = ({
   onCancel,
   getGroupName,
   formatDate,
-  formatTime,
-  showGroupName = true,
-  animationDelay = 0
+  showGroupName = true
 }) => {
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.4, delay: animationDelay }}
-      className="apple-reminder-item"
-    >
+    <div className="apple-reminder-item">
       <div 
         className="apple-reminder-checkbox"
         style={{ borderColor: reminder.color }}
@@ -36,9 +26,12 @@ export const ReminderItem: React.FC<ReminderItemProps> = ({
       <div className="apple-reminder-content">
         <div className="apple-reminder-title">{reminder.title}</div>
         <div className="apple-reminder-meta">
-          {formatDate(reminder.created_at)}
+          {formatDate(reminder.start_at)}
           {showGroupName && ` • ${getGroupName(reminder.group_id)}`}
-          {formatTime && ` • 重复: ${formatTime(reminder.repeat_interval)}`}
+          {reminder.cron_expression && ` • Cron: ${reminder.cron_expression}`}
+          {reminder.description && ` • ${reminder.description}`}
+          {reminder.is_cancelled && ' • 已取消'}
+          {reminder.is_paused && ' • 已暂停'}
         </div>
       </div>
       {!reminder.is_cancelled && (
@@ -52,6 +45,6 @@ export const ReminderItem: React.FC<ReminderItemProps> = ({
           }
         />
       )}
-    </motion.div>
+    </div>
   );
 };

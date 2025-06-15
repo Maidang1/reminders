@@ -14,7 +14,7 @@ export const useReminderAPI = () => {
   };
 
   const deleteGroup = async (groupId: string): Promise<void> => {
-    return await invoke('delete_group', { groupId });
+    return await invoke('delete_group', { group_id: groupId });
   };
 
   const getReminders = async (): Promise<Reminder[]> => {
@@ -25,14 +25,14 @@ export const useReminderAPI = () => {
     return await invoke('create_reminder', {
       title: data.title,
       color: data.color,
-      groupId: data.group_id,
-      repeatInterval: data.repeat_interval,
-      repeatDuration: data.repeat_duration,
+      group_id: data.group_id,
+      cron_expression: data.cron_expression,
+      description: data.description,
     });
   };
 
   const cancelReminder = async (reminderId: string): Promise<void> => {
-    return await invoke('cancel_reminder', { reminderId });
+    return await invoke('cancel_reminder', { reminder_id: reminderId });
   };
 
   return {

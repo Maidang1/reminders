@@ -1,6 +1,4 @@
 @import "tailwindcss";
-/* @import "tw-animate-css"; */
-
 
 /* Soft Poetry Theme inspired by the image */
 :root {
@@ -59,7 +57,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  transition: all 0.2s ease;
   cursor: pointer;
   border: none;
   width: calc(100% - 16px);
@@ -141,7 +138,6 @@
   font-size: 14px;
   color: var(--text-primary);
   width: 100%;
-  transition: all 0.2s ease;
 }
 
 .apple-input:focus {
@@ -162,7 +158,6 @@
   padding: 8px 16px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -176,8 +171,6 @@
 
 .apple-button-primary:hover {
   background: #5A89C4;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(107, 155, 210, 0.3);
 }
 
 .apple-button-secondary {
@@ -202,11 +195,6 @@
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.apple-color-option:hover {
-  transform: scale(1.1);
 }
 
 .apple-color-option.selected {
@@ -224,13 +212,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(107, 155, 210, 0.08);
 }
 
 .apple-reminder-item:hover {
   background: var(--sidebar-hover);
-  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(107, 155, 210, 0.15);
 }
 
@@ -299,30 +285,6 @@
   min-height: 100vh;
   display: flex;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Magic UI Animations - keeping existing ones */
-@keyframes orbit {
-  0% {
-    transform: rotate(0deg) translateY(calc(var(--radius) * 1px)) rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg) translateY(calc(var(--radius) * 1px)) rotate(-360deg);
-  }
-}
-
-@keyframes slide {
-  to {
-    transform: translate(calc(100cqw - 100%), 0);
-  }
-}
-
-.animate-orbit {
-  animation: orbit calc(var(--duration)*1s) linear infinite;
-}
-
-.animate-slide {
-  animation: slide var(--speed) ease-in-out infinite alternate;
 }
 
 /* Poetry-style typography */
@@ -394,12 +356,6 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   box-shadow: 0 2px 12px rgba(107, 155, 210, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.poetry-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(107, 155, 210, 0.12);
 }
 
 .poetry-text {
@@ -417,35 +373,6 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--border-color), transparent);
   margin: 24px 0;
-}
-
-/* Soft animations */
-.poetry-fade-in {
-  animation: poetry-fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes poetry-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.poetry-float {
-  animation: poetry-float 3s ease-in-out infinite;
-}
-
-@keyframes poetry-float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
 }
 
 /* Custom scrollbar for poetry theme */
@@ -476,15 +403,5 @@
   padding: 10px 20px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(107, 155, 210, 0.2);
-}
-
-.poetry-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(107, 155, 210, 0.3);
-}
-
-.poetry-button:active {
-  transform: translateY(0);
 }
