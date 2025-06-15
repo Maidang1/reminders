@@ -1,3 +1,4 @@
+mod scheduler;
 mod store;
 
 use serde::{Deserialize, Serialize};
@@ -5,6 +6,7 @@ use std::sync::Mutex;
 use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
+use crate::scheduler::ReminderScheduler;
 use crate::store::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -30,10 +32,28 @@ pub fn run() {
                 .get("reminders")
                 .and_then(|value| serde_json::from_value(value).ok())
                 .unwrap_or_default();
-            app.manage(Mutex::new(AppState {
-                groups,
-                reminders,
+            
+            app.manage(Mutex::new(AppState { 
+                groups, 
+                reminders: reminders.clone(),
             }));
+
+            // 初始化调度器
+            let reminder_scheduler = ReminderScheduler::new();
+            reminder_scheduler.start_scheduler(); // 启动调度器
+            app.manage(reminder_scheduler.clone());
+
+            // 在后台任务中恢复提醒任务
+            let app_handle = app.handle().clone();
+            std::thread::spawn(move || {
+                // 使用 tokio runtime 来运行异步代码
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async {
+                    if let Err(e) = reminder_scheduler.restore_reminder_jobs(&reminders, app_handle).await {
+                        eprintln!("Failed to restore reminder jobs: {}", e);
+                    }
+                });
+            });
 
             Ok(())
         })

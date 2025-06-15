@@ -1,5 +1,5 @@
-use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 use tauri::State;
 
 use crate::AppState;
@@ -9,7 +9,7 @@ pub struct ReminderGroup {
     pub id: String,
     pub name: String,
     pub color: String,
-    pub created_at: i64,
+    pub start_at: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,12 +18,13 @@ pub struct Reminder {
     pub title: String,
     pub color: String,
     pub group_id: String,
-    pub repeat_interval: u64, // in seconds
-    pub repeat_duration: u64, // in seconds, how long to repeat
-    pub created_at: i64,
+    pub cron_expression: Option<String>, // cron expression for scheduling
+    pub start_at: i64,
     pub last_triggered: Option<i64>,
     pub is_cancelled: bool,
-    pub next_trigger: i64,
+    pub is_deleted: bool,
+    pub is_paused: bool,
+    pub description: Option<String>,
 }
 
 #[tauri::command]
@@ -46,7 +47,7 @@ pub async fn create_group(
         id: uuid::Uuid::new_v4().to_string(),
         name,
         color,
-        created_at: chrono::Utc::now().timestamp(),
+        start_at: chrono::Utc::now().timestamp(),
     };
 
     let mut state = state
@@ -72,8 +73,8 @@ pub async fn create_reminder(
     title: String,
     color: String,
     group_id: String,
-    repeat_interval: u64,
-    repeat_duration: u64,
+    cron_expression: Option<String>,
+    description: Option<String>,
     state: State<'_, Mutex<AppState>>,
 ) -> Result<Reminder, String> {
     let now = chrono::Utc::now().timestamp();
@@ -82,15 +83,18 @@ pub async fn create_reminder(
         title,
         color,
         group_id,
-        repeat_interval,
-        repeat_duration,
-        created_at: now,
+        start_at: now,
         last_triggered: None,
         is_cancelled: false,
-        next_trigger: now + repeat_interval as i64,
+        is_deleted: false,
+        is_paused: false,
+        cron_expression,
+        description,
     };
 
-    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    let mut state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
     state.reminders.push(reminder.clone());
 
     println!("Created reminder: {:?} {:?}", reminder, state.reminders);
@@ -102,7 +106,9 @@ pub async fn cancel_reminder(
     reminder_id: String,
     state: State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
-    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    let mut state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
     let mut reminders = state.reminders.clone();
 
     if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
@@ -119,7 +125,9 @@ pub async fn delete_group(
     group_id: String,
     state: State<'_, Mutex<AppState>>,
 ) -> Result<(), String> {
-    let mut state = state.lock().map_err(|e| format!("Failed to lock state: {}", e))?;
+    let mut state = state
+        .lock()
+        .map_err(|e| format!("Failed to lock state: {}", e))?;
     state.groups.retain(|g| g.id != group_id);
     state.reminders.retain(|r| r.group_id != group_id);
     Ok(())
