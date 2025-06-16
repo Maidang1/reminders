@@ -32,7 +32,7 @@ export const useReminderAPI = () => {
   };
 
   const cancelReminder = async (reminderId: string): Promise<void> => {
-    return await invoke('cancel_reminder', { reminder_id: reminderId });
+    return await invoke('cancel_reminder', { reminderId: reminderId });
   };
 
   return {

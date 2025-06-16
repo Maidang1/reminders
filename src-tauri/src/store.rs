@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
 use tauri::State;
 
 use crate::AppState;
@@ -28,20 +27,17 @@ pub struct Reminder {
 }
 
 #[tauri::command]
-pub async fn get_groups(state: State<'_, Mutex<AppState>>) -> Result<Vec<ReminderGroup>, String> {
-    let state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    let groups = state.groups.clone();
-
-    Ok(groups)
+pub async fn get_groups(state: State<'_, AppState>) -> Result<Vec<ReminderGroup>, String> {
+    let groups = state.groups.read()
+        .map_err(|e| format!("Failed to read groups: {}", e))?;
+    Ok(groups.clone())
 }
 
 #[tauri::command]
 pub async fn create_group(
     name: String,
     color: String,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, AppState>,
 ) -> Result<ReminderGroup, String> {
     let group = ReminderGroup {
         id: uuid::Uuid::new_v4().to_string(),
@@ -50,22 +46,18 @@ pub async fn create_group(
         start_at: chrono::Utc::now().timestamp(),
     };
 
-    let mut state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    state.groups.push(group.clone());
+    let mut groups = state.groups.write()
+        .map_err(|e| format!("Failed to write groups: {}", e))?;
+    groups.push(group.clone());
 
     Ok(group)
 }
 
 #[tauri::command]
-pub async fn get_reminders(state: State<'_, Mutex<AppState>>) -> Result<Vec<Reminder>, String> {
-    let state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    let reminders = state.reminders.clone();
-
-    Ok(reminders)
+pub async fn get_reminders(state: State<'_, AppState>) -> Result<Vec<Reminder>, String> {
+    let reminders = state.reminders.read()
+        .map_err(|e| format!("Failed to read reminders: {}", e))?;
+    Ok(reminders.clone())
 }
 
 #[tauri::command]
@@ -75,7 +67,7 @@ pub async fn create_reminder(
     group_id: String,
     cron_expression: Option<String>,
     description: Option<String>,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, AppState>,
 ) -> Result<Reminder, String> {
     let now = chrono::Utc::now().timestamp();
     let reminder = Reminder {
@@ -92,10 +84,11 @@ pub async fn create_reminder(
         description,
     };
 
-    let mut state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    state.reminders.push(reminder.clone());
+    // 添加到 reminders 列表
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+    reminders.push(reminder.clone());
+    drop(reminders); // 释放写锁
 
     // 在一个新的线程中添加提醒任务
     let scheduler = state.reminder_scheduler.clone();
@@ -111,31 +104,21 @@ pub async fn create_reminder(
         });
     });
 
-    println!("Created reminder: {:?} {:?}", reminder, state.reminders);
+    println!("Created reminder: {:?}", reminder);
     Ok(reminder)
 }
 
 #[tauri::command]
 pub async fn cancel_reminder(
     reminder_id: String,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let mut state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    let mut reminders = state.reminders.clone();
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
 
     if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
         reminder.is_cancelled = true;
-        state.reminders = reminders;
-
-        state
-            .reminder_scheduler
-            .write()
-            .unwrap()
-            .remove_reminder_job(reminder_id.as_str())
-            .map_err(|e| format!("Failed to remove reminder job: {}", e))?;
-
+        println!("Cancelled reminder: {}", reminder_id);
         Ok(())
     } else {
         Err("Reminder not found".to_string())
@@ -145,28 +128,165 @@ pub async fn cancel_reminder(
 #[tauri::command]
 pub async fn delete_group(
     group_id: String,
-    state: State<'_, Mutex<AppState>>,
+    state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let mut state = state
-        .lock()
-        .map_err(|e| format!("Failed to lock state: {}", e))?;
-    state.groups.retain(|g| g.id != group_id);
-    state.reminders.retain(|r| r.group_id != group_id);
-    let reminder_ids = state
-        .reminders
+    // 删除组
+    let mut groups = state.groups.write()
+        .map_err(|e| format!("Failed to write groups: {}", e))?;
+    groups.retain(|g| g.id != group_id);
+    drop(groups);
+
+    // 获取要删除的 reminder IDs
+    let reminders = state.reminders.read()
+        .map_err(|e| format!("Failed to read reminders: {}", e))?;
+    let reminder_ids: Vec<String> = reminders
         .iter()
         .filter(|r| r.group_id == group_id)
         .map(|r| r.id.clone())
-        .collect::<Vec<_>>();
-    for reminder_id in reminder_ids {
-        state
-            .reminder_scheduler
-            .write()
-            .unwrap()
-            .remove_reminder_job(reminder_id.as_str())
-            .map_err(|e| format!("Failed to remove reminder job: {}", e))?;
-    }
-    println!("Deleted group with ID: {}", group_id);
+        .collect();
+    drop(reminders);
 
+    // 删除相关的 reminders
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+    reminders.retain(|r| r.group_id != group_id);
+    drop(reminders);
+
+    // 移除相关的调度任务
+    for reminder_id in reminder_ids {
+        if let Ok(scheduler) = state.reminder_scheduler.read() {
+            if let Err(e) = scheduler.remove_reminder_job(&reminder_id) {
+                eprintln!("Failed to remove reminder job {}: {}", reminder_id, e);
+            }
+        }
+    }
+
+    println!("Deleted group with ID: {}", group_id);
     Ok(())
+}
+
+#[tauri::command]
+pub async fn update_reminder(
+    reminder_id: String,
+    title: Option<String>,
+    color: Option<String>,
+    cron_expression: Option<String>,
+    description: Option<String>,
+    start_at: Option<i64>,
+    state: State<'_, AppState>,
+) -> Result<Reminder, String> {
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+
+    if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
+        let cron_changed = cron_expression.is_some();
+        let start_changed = start_at.is_some();
+        
+        if let Some(title) = title {
+            reminder.title = title;
+        }
+        if let Some(color) = color {
+            reminder.color = color;
+        }
+        if let Some(cron_expression) = cron_expression {
+            reminder.cron_expression = Some(cron_expression);
+        }
+        if let Some(description) = description {
+            reminder.description = Some(description);
+        }
+        if let Some(start_at) = start_at {
+            reminder.start_at = start_at;
+        }
+
+        let updated_reminder = reminder.clone();
+        drop(reminders);
+
+        // 如果时间或 cron 表达式有变化，重新添加调度任务
+        if start_changed || cron_changed {
+            let scheduler = state.reminder_scheduler.clone();
+            let reminder_for_job = updated_reminder.clone();
+            std::thread::spawn(move || {
+                let rt = tokio::runtime::Runtime::new().unwrap();
+                rt.block_on(async {
+                    if let Ok(scheduler_guard) = scheduler.read() {
+                        // 先移除旧任务
+                        if let Err(e) = scheduler_guard.remove_reminder_job(&reminder_for_job.id) {
+                            eprintln!("Failed to remove old reminder job: {}", e);
+                        }
+                    }
+                    if let Ok(mut scheduler_guard) = scheduler.write() {
+                        // 添加新任务
+                        if let Err(e) = scheduler_guard.add_reminder_job(&reminder_for_job).await {
+                            eprintln!("Failed to add updated reminder job: {}", e);
+                        }
+                    }
+                });
+            });
+        }
+
+        println!("Updated reminder: {:?}", updated_reminder);
+        Ok(updated_reminder)
+    } else {
+        Err("Reminder not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn pause_reminder(
+    reminder_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+
+    if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
+        reminder.is_paused = true;
+        println!("Paused reminder: {}", reminder_id);
+        Ok(())
+    } else {
+        Err("Reminder not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn resume_reminder(
+    reminder_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+
+    if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
+        reminder.is_paused = false;
+        println!("Resumed reminder: {}", reminder_id);
+        Ok(())
+    } else {
+        Err("Reminder not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub async fn delete_reminder(
+    reminder_id: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut reminders = state.reminders.write()
+        .map_err(|e| format!("Failed to write reminders: {}", e))?;
+
+    if let Some(reminder) = reminders.iter_mut().find(|r| r.id == reminder_id) {
+        reminder.is_deleted = true;
+        println!("Deleted reminder: {}", reminder_id);
+        
+        // 移除调度任务
+        drop(reminders);
+        if let Ok(scheduler) = state.reminder_scheduler.read() {
+            if let Err(e) = scheduler.remove_reminder_job(&reminder_id) {
+                eprintln!("Failed to remove reminder job {}: {}", reminder_id, e);
+            }
+        }
+        
+        Ok(())
+    } else {
+        Err("Reminder not found".to_string())
+    }
 }

@@ -3,15 +3,14 @@ mod store;
 
 use crate::scheduler::ReminderScheduler;
 use crate::store::*;
-use std::sync::RwLock;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use tauri::Manager;
 use tauri_plugin_store::StoreExt;
 
 #[derive(Debug, Clone)]
 pub struct AppState {
-    pub groups: Vec<ReminderGroup>,
-    pub reminders: Vec<Reminder>,
+    pub groups: Arc<RwLock<Vec<ReminderGroup>>>,
+    pub reminders: Arc<RwLock<Vec<Reminder>>>,
     pub reminder_scheduler: Arc<RwLock<ReminderScheduler>>,
 }
 
@@ -35,19 +34,24 @@ pub fn run() {
 
             let app_handle = app.handle();
 
-            // 初始化调度器
-            let reminder_scheduler =
-                Arc::new(RwLock::new(ReminderScheduler::new(app_handle.clone())));
+            // 创建共享的 reminders 引用
+            let reminders_shared = Arc::new(RwLock::new(reminders.clone()));
+
+            // 初始化调度器，传递 reminders 的共享引用
+            let reminder_scheduler = Arc::new(RwLock::new(ReminderScheduler::new(
+                app_handle.clone(),
+                Arc::clone(&reminders_shared),
+            )));
             let scheduler = reminder_scheduler.read().unwrap();
             scheduler.start_scheduler(); // 启动调度器
 
             let app_state = AppState {
-                groups,
-                reminders: reminders.clone(),
+                groups: Arc::new(RwLock::new(groups)),
+                reminders: reminders_shared,
                 reminder_scheduler: Arc::clone(&reminder_scheduler),
             };
 
-            app.manage(Mutex::new(app_state));
+            app.manage(app_state);
 
             // 保存提醒数据的引用，稍后恢复任务
             let scheduler_clone = Arc::clone(&reminder_scheduler);
@@ -76,16 +80,18 @@ pub fn run() {
             create_group,
             get_reminders,
             create_reminder,
+            update_reminder,
             cancel_reminder,
+            pause_reminder,
+            resume_reminder,
+            delete_reminder,
             delete_group
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let app_state = window.state::<Mutex<AppState>>();
-                let state_guard = app_state.lock().unwrap();
-                let groups = state_guard.groups.clone();
-                let reminders = state_guard.reminders.clone();
-                drop(state_guard); // Release the lock before doing I/O
+                let app_state = window.state::<AppState>();
+                let groups = app_state.groups.read().unwrap().clone();
+                let reminders = app_state.reminders.read().unwrap().clone();
 
                 let app_handle = window.app_handle();
                 let store = app_handle

@@ -3,7 +3,7 @@ use english_to_cron::str_cron_syntax;
 use job_scheduler_ng::{Job, JobScheduler};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, RwLock};
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
@@ -46,19 +46,22 @@ pub struct ReminderScheduler {
     scheduler: Arc<Mutex<SendSyncJobScheduler>>,
     job_ids: Arc<Mutex<HashMap<String, uuid::Uuid>>>,
     app_handle: AppHandle,
+    reminders: Arc<RwLock<Vec<Reminder>>>,
 }
 
 impl ReminderScheduler {
-    pub fn new(app_handle: AppHandle) -> Self {
+    pub fn new(app_handle: AppHandle, reminders: Arc<RwLock<Vec<Reminder>>>) -> Self {
         Self {
             scheduler: Arc::new(Mutex::new(SendSyncJobScheduler::new())),
             job_ids: Arc::new(Mutex::new(HashMap::new())),
             app_handle,
+            reminders,
         }
     }
 
     /// 添加新的提醒任务
     pub async fn add_reminder_job(&mut self, reminder: &Reminder) -> Result<(), String> {
+        let reminder_id = reminder.id.clone();
         let reminder_title = reminder.title.clone();
         let start_at = reminder.start_at;
         let cron_expression = &reminder
@@ -72,16 +75,61 @@ impl ReminderScheduler {
 
         let app_handle = self.app_handle.clone();
         let title_clone = reminder_title.clone();
+        let reminders_ref = Arc::clone(&self.reminders);
+        let reminder_id_clone = reminder_id.clone();
 
         let job = Job::new(
             cron_expr
                 .parse()
                 .map_err(|e| format!("Invalid cron expression1: {}", e))?,
             move || {
-                if let Err(e) =
-                    ReminderScheduler::send_notification_sync_internal(&app_handle, &title_clone)
-                {
-                    eprintln!("Failed to send notification: {}", e);
+                // 实时检查 reminder 状态
+                if let Ok(reminders) = reminders_ref.read() {
+                    if let Some(current_reminder) =
+                        reminders.iter().find(|r| r.id == reminder_id_clone)
+                    {
+                        // 检查 reminder 是否被取消、暂停或删除
+                        if current_reminder.is_cancelled
+                            || current_reminder.is_paused
+                            || current_reminder.is_deleted
+                        {
+                            println!(
+                                "Reminder {} is cancelled/paused/deleted, skipping notification",
+                                current_reminder.title
+                            );
+                            return;
+                        }
+
+                        // 发送通知
+                        if let Err(e) = ReminderScheduler::send_notification_sync_internal(
+                            &app_handle,
+                            &title_clone,
+                        ) {
+                            eprintln!("Failed to send notification: {}", e);
+                        }
+
+                        // 更新 last_triggered 时间
+                        drop(reminders); // 释放读锁
+                        if let Ok(mut reminders_write) = reminders_ref.write() {
+                            if let Some(reminder_to_update) = reminders_write
+                                .iter_mut()
+                                .find(|r| r.id == reminder_id_clone)
+                            {
+                                reminder_to_update.last_triggered =
+                                    Some(chrono::Utc::now().timestamp());
+                            }
+                        }
+                    } else {
+                        println!(
+                            "Reminder {} not found, skipping notification",
+                            reminder_id_clone
+                        );
+                    }
+                } else {
+                    eprintln!(
+                        "Failed to read reminders for reminder {}",
+                        reminder_id_clone
+                    );
                 }
             },
         );
@@ -119,6 +167,8 @@ impl ReminderScheduler {
                 .map_err(|e| format!("Failed to lock scheduler: {}", e))?;
             scheduler.remove(job_id);
             println!("Removed reminder job for: {}", reminder_id);
+        } else {
+            println!("Reminder job not found for: {}", reminder_id);
         }
 
         Ok(())
@@ -176,6 +226,7 @@ impl Clone for ReminderScheduler {
             scheduler: Arc::clone(&self.scheduler),
             job_ids: Arc::clone(&self.job_ids),
             app_handle: self.app_handle.clone(),
+            reminders: Arc::clone(&self.reminders),
         }
     }
 }
