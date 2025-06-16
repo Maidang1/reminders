@@ -1,27 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useReminderAPI } from './hooks/useReminderAPI';
-import { ReminderGroup, Reminder, CreateReminderData } from './types';
-import { GroupList } from './components/GroupList';
+import { Reminder, CreateReminderData } from './types';
 import { ReminderList } from './components/ReminderList';
+// import { AddReminderPanel } from './components/AddReminderPanel';
 import './App.css';
+import { AddReminderPanel } from './components/AddReminderPanel';
 
 function App() {
-  const [groups, setGroups] = useState<ReminderGroup[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddPanel, setShowAddPanel] = useState(false);
 
   const api = useReminderAPI();
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [groupsData, remindersData] = await Promise.all([
-        api.getGroups(),
-        api.getReminders(),
-      ]);
-      setGroups(groupsData);
+      const remindersData = await api.getReminders();
       setReminders(remindersData);
       setError(null);
     } catch (err) {
@@ -36,32 +32,9 @@ function App() {
     loadData();
   }, []);
 
-  const handleCreateGroup = async (name: string, color: string) => {
-    try {
-      const newGroup = await api.createGroup({ name, color });
-      setGroups((prev) => [...prev, newGroup]);
-    } catch (err) {
-      console.error('Failed to create group:', err);
-    }
-  };
-
-  const handleDeleteGroup = async (groupId: string) => {
-    try {
-      await api.deleteGroup(groupId);
-      setGroups((prev) => prev.filter((g) => g.id !== groupId));
-      setReminders((prev) => prev.filter((r) => r.group_id !== groupId));
-      if (selectedGroupId === groupId) {
-        setSelectedGroupId(null);
-      }
-    } catch (err) {
-      console.error('Failed to delete group:', err);
-    }
-  };
-
   const handleCreateReminder = async (data: CreateReminderData) => {
     try {
       console.log('Created reminder:', data);
-
       const newReminder = await api.createReminder(data);
       console.log('Created reminder:', newReminder, data);
       setReminders((prev) => [...prev, newReminder]);
@@ -85,11 +58,11 @@ function App() {
 
   if (loading) {
     return (
-      <div className='apple-app-container items-center justify-center'>
-        <div className='apple-form-container text-center max-w-sm mx-auto'>
-          <div className='w-12 h-12 border-3 border-slate-400 border-t-transparent rounded-full mx-auto mb-4'></div>
-          <div className='text-lg font-semibold text-white mb-2'>加载中...</div>
-          <div className='text-sm text-gray-400'>正在获取您的提醒数据</div>
+      <div className='app-container loading-state'>
+        <div className='loading-content'>
+          <div className='loading-spinner'></div>
+          <div className='loading-text'>加载中...</div>
+          <div className='loading-subtext'>正在获取您的提醒数据</div>
         </div>
       </div>
     );
@@ -97,11 +70,11 @@ function App() {
 
   if (error) {
     return (
-      <div className='apple-app-container items-center justify-center'>
-        <div className='apple-form-container text-center max-w-md mx-auto'>
-          <div className='w-16 h-16 bg-red-500 bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4'>
+      <div className='app-container error-state'>
+        <div className='error-content'>
+          <div className='error-icon'>
             <svg
-              className='w-8 h-8 text-red-400'
+              className='error-svg'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -114,13 +87,11 @@ function App() {
               />
             </svg>
           </div>
-          <div className='text-lg font-semibold text-red-400 mb-2'>
-            出现错误
-          </div>
-          <div className='text-sm text-gray-400 mb-6'>{error}</div>
+          <div className='error-title'>出现错误</div>
+          <div className='error-message'>{error}</div>
           <button
             onClick={loadData}
-            className='apple-button apple-button-primary'
+            className='retry-button'
           >
             重试
           </button>
@@ -130,30 +101,32 @@ function App() {
   }
 
   return (
-    <div className='apple-app-container'>
-      {/* 左侧分组列表 */}
-      <div className='w-80 apple-sidebar apple-scrollbar overflow-y-auto'>
-        <GroupList
-          groups={groups}
-          selectedGroupId={selectedGroupId}
-          onSelectGroup={setSelectedGroupId}
-          onCreateGroup={handleCreateGroup}
-          onDeleteGroup={handleDeleteGroup}
+    <div className='app-container'>
+      {/* 主要内容区域 */}
+      <div className='main-content'>
+        <ReminderList
           reminders={reminders}
           onCancelReminder={handleCancelReminder}
         />
       </div>
 
-      {/* 右侧提醒创建区域 */}
-      <div className='flex-1 apple-main-content apple-scrollbar overflow-y-auto'>
-        <ReminderList
-          reminders={reminders}
-          groups={groups}
-          selectedGroupId={selectedGroupId}
-          onCreateReminder={handleCreateReminder}
-          onCancelReminder={handleCancelReminder}
-        />
-      </div>
+      {/* 右下角添加按钮 */}
+      <button
+        onClick={() => setShowAddPanel(true)}
+        className='add-button'
+        aria-label="添加提醒"
+      >
+        <svg className='add-icon' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 4v16m8-8H4' />
+        </svg>
+      </button>
+
+      {/* 添加提醒面板 */}
+      <AddReminderPanel
+        isOpen={showAddPanel}
+        onClose={() => setShowAddPanel(false)}
+        onCreateReminder={handleCreateReminder}
+      />
     </div>
   );
 }

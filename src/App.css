@@ -21,9 +21,6 @@
   --poetry-gray-100: #ECF0F1;
   
   /* Soft Theme Colors matching the poetry app */
-  --sidebar-bg: #F8FAFE;
-  --sidebar-hover: #E8F2FE;
-  --sidebar-selected: #6B9BD2;
   --main-bg: #F0F8FF;
   --card-bg: #FFFFFF;
   --text-primary: #2C3E50;
@@ -31,6 +28,8 @@
   --text-tertiary: #8596A8;
   --border-color: #E0E8F0;
   --input-bg: #FFFFFF;
+  --add-button-bg: #6B9BD2;
+  --add-button-hover: #5A8BC0;
   
   /* Border Radius */
   --radius-sm: 6px;
@@ -39,64 +38,305 @@
   --radius-xl: 16px;
 }
 
-/* Poetry App Sidebar Styles */
-.apple-sidebar {
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
-  box-shadow: 0 0 20px rgba(107, 155, 210, 0.1);
-}
-
-.apple-sidebar-item {
-  background: transparent;
-  color: var(--text-primary);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  margin: 2px 8px;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  border: none;
-  width: calc(100% - 16px);
-}
-
-.apple-sidebar-item:hover {
-  background: var(--sidebar-hover);
-}
-
-.apple-sidebar-item.selected {
-  background: var(--sidebar-selected);
-  color: white;
-  box-shadow: 0 2px 8px rgba(107, 155, 210, 0.3);
-}
-
-.apple-sidebar-item-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.apple-sidebar-badge {
-  background: var(--text-tertiary);
-  color: white;
-  border-radius: 10px;
-  padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 600;
-  min-width: 20px;
-  text-align: center;
-}
-
-.apple-sidebar-item.selected .apple-sidebar-badge {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Poetry App Main Content */
-.apple-main-content {
+/* App Container - 响应式布局 */
+.app-container {
+  min-height: 100vh;
   background: var(--main-bg);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Main Content */
+.main-content {
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 0;
+}
+
+/* Reminder List Container */
+.reminder-list-container {
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* PC 样式 */
+@media (min-width: 768px) {
+  .reminder-list-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+.reminder-list-content {
+  max-width: 100%;
+}
+
+/* 页面标题 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
   color: var(--text-primary);
+  margin: 0;
+}
+
+/* H5 样式调整 */
+@media (max-width: 767px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+}
+
+.reminder-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: var(--card-bg);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px rgba(107, 155, 210, 0.1);
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  min-height: 60vh;
+}
+
+.empty-icon {
+  width: 6rem;
+  height: 6rem;
+  background: rgba(107, 155, 210, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.empty-svg {
+  width: 3rem;
+  height: 3rem;
+  color: var(--poetry-blue);
+}
+
+.empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem 0;
+}
+
+.empty-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* H5 空状态调整 */
+@media (max-width: 767px) {
+  .empty-state {
+    padding: 3rem 1rem;
+    min-height: 50vh;
+  }
+  
+  .empty-icon {
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .empty-svg {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .empty-title {
+    font-size: 1.25rem;
+  }
+  
+  .empty-subtitle {
+    font-size: 0.875rem;
+  }
+}
+
+/* 提醒内容区域 */
+.reminders-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* 右下角添加按钮 */
+.add-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--add-button-bg);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 20px rgba(107, 155, 210, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 30;
+}
+
+.add-button:hover {
+  background: var(--add-button-hover);
+  transform: scale(1.05);
+  box-shadow: 0 6px 25px rgba(107, 155, 210, 0.5);
+}
+
+.add-button:active {
+  transform: scale(0.95);
+}
+
+/* H5 添加按钮调整 */
+@media (max-width: 767px) {
+  .add-button {
+    bottom: 1rem;
+    right: 1rem;
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+.add-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: white;
+  stroke-width: 2.5;
+}
+
+/* H5 图标调整 */
+@media (max-width: 767px) {
+  .add-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--main-bg);
+}
+
+.loading-content {
+  text-align: center;
+  max-width: 20rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.loading-spinner {
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid var(--poetry-gray-300);
+  border-top: 3px solid var(--poetry-blue);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.loading-subtext {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: var(--main-bg);
+}
+
+.error-content {
+  text-align: center;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.error-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(205, 145, 158, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem auto;
+}
+
+.error-svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--poetry-red);
+}
+
+.error-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--poetry-red);
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.retry-button {
+  background: var(--poetry-blue);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-button:hover {
+  background: var(--add-button-hover);
 }
 
 .apple-section-title {
@@ -122,46 +362,49 @@
 
 /* Poetry App Form Styles */
 .apple-form-container {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 12px rgba(107, 155, 210, 0.08);
+  background: rgba(44, 62, 80, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
 .apple-input {
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  font-size: 14px;
-  color: var(--text-primary);
   width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
 }
 
 .apple-input:focus {
   outline: none;
   border-color: var(--poetry-blue);
+  background: rgba(255, 255, 255, 0.15);
   box-shadow: 0 0 0 3px rgba(107, 155, 210, 0.1);
 }
 
 .apple-input::placeholder {
-  color: var(--text-tertiary);
+  color: rgba(255, 255, 255, 0.5);
 }
 
-/* Apple Buttons */
+/* 按钮样式 */
 .apple-button {
+  padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 14px;
-  padding: 8px 16px;
-  border: none;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 0.5rem;
 }
 
 .apple-button-primary {
@@ -170,238 +413,239 @@
 }
 
 .apple-button-primary:hover {
-  background: #5A89C4;
+  background: var(--add-button-hover);
+  transform: translateY(-1px);
 }
 
 .apple-button-secondary {
-  background: var(--card-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .apple-button-secondary:hover {
-  background: var(--sidebar-hover);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
-.apple-button-small {
-  padding: 6px 12px;
-  font-size: 13px;
+/* 表单字段样式 */
+.form-field {
+  margin-bottom: 1.5rem;
 }
 
-/* Color Options */
-.apple-color-option {
-  width: 24px;
-  height: 24px;
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.form-label.required::after {
+  content: " *";
+  color: var(--poetry-red);
+}
+
+/* 颜色选择器样式 */
+.color-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.apple-color-option.selected {
-  border-color: white;
-  box-shadow: 0 0 0 2px var(--poetry-blue);
+.color-option:hover {
+  transform: scale(1.1);
 }
 
-/* Poetry Reminder Item */
-.apple-reminder-item {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  box-shadow: 0 1px 3px rgba(107, 155, 210, 0.08);
+.color-option.selected {
+  border-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
 }
 
-.apple-reminder-item:hover {
-  background: var(--sidebar-hover);
-  box-shadow: 0 2px 8px rgba(107, 155, 210, 0.15);
-}
-
-.apple-reminder-checkbox {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--text-tertiary);
-  border-radius: 50%;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.apple-reminder-content {
-  flex: 1;
-}
-
-.apple-reminder-title {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.apple-reminder-meta {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* Search Box */
-.apple-search {
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  font-size: 14px;
-  color: var(--text-primary);
-  width: 100%;
-  margin-bottom: 16px;
-}
-
-.apple-search::placeholder {
-  color: var(--text-tertiary);
-}
-
-/* Scrollbar */
-.apple-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--text-tertiary);
-  border-radius: 4px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* Main App Layout */
-.apple-app-container {
-  background: var(--main-bg);
-  min-height: 100vh;
-  display: flex;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-/* Poetry-style typography */
-.apple-heading {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--poetry-gray-900);
-  line-height: 1.2;
-}
-
-.apple-subheading {
-  font-size: 20px;
+.color-option.selected::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--poetry-gray-800);
-  line-height: 1.3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-.apple-body {
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--poetry-gray-700);
-  line-height: 1.5;
+/* 响应式调整 - H5 */
+@media (max-width: 767px) {
+  .apple-form-container {
+    padding: 1.5rem;
+    margin: 1rem;
+    border-radius: var(--radius-lg);
+  }
+  
+  .apple-input {
+    padding: 0.875rem 1rem;
+    font-size: 1rem; /* H5 输入框字体稍大 */
+  }
+  
+  .apple-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .color-option {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
 }
 
-.apple-caption {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--poetry-gray-500);
-  line-height: 1.4;
-}
-
-/* Apple-style scrollbar */
+/* 滚动条样式 */
 .apple-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-  background-clip: content-box;
-}
-
-/* Poetry-style background gradient */
-.apple-background {
-  background: linear-gradient(135deg, #F0F8FF 0%, #E8F2FE 100%);
-  min-height: 100vh;
-}
-
-.apple-background-alt {
-  background: linear-gradient(135deg, #F8FAFE 0%, #E0E8F0 100%);
-  min-height: 100vh;
-}
-
-/* Poetry-inspired additional styles */
-.poetry-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(107, 155, 210, 0.08);
-}
-
-.poetry-text {
-  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Heiti SC', 'Microsoft YaHei', sans-serif;
-  line-height: 1.6;
-  letter-spacing: 0.02em;
-}
-
-.poetry-accent {
-  color: var(--poetry-pink);
-  font-weight: 500;
-}
-
-.poetry-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border-color), transparent);
-  margin: 24px 0;
-}
-
-/* Custom scrollbar for poetry theme */
-.poetry-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
 
-.poetry-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.poetry-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--poetry-blue);
+.apple-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
-  opacity: 0.6;
 }
 
-.poetry-scrollbar::-webkit-scrollbar-thumb:hover {
-  opacity: 0.8;
+.apple-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
 }
 
-/* Enhanced button styles */
-.poetry-button {
-  background: linear-gradient(135deg, var(--poetry-blue), #8BB3E3);
+.apple-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* 时间段样式 */
+.time-section {
+  margin-bottom: 2rem;
+}
+
+.time-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+}
+
+/* 提醒项样式 */
+.reminder-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(107, 155, 210, 0.1);
+  transition: all 0.2s ease;
+}
+
+.reminder-item:hover {
+  box-shadow: 0 4px 12px rgba(107, 155, 210, 0.15);
+  transform: translateY(-1px);
+}
+
+.reminder-item-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.reminder-color-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.reminder-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+  word-wrap: break-word;
+}
+
+.reminder-description {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.reminder-action-button {
+  padding: 0.5rem;
   border: none;
-  border-radius: var(--radius-md);
-  color: white;
-  padding: 10px 20px;
-  font-weight: 500;
+  background: transparent;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(107, 155, 210, 0.2);
+  transition: background-color 0.2s ease;
+  color: var(--text-tertiary);
+}
+
+.reminder-action-button:hover {
+  background: rgba(107, 155, 210, 0.1);
+  color: var(--poetry-blue);
+}
+
+/* H5 提醒项调整 */
+@media (max-width: 767px) {
+  .reminder-item {
+    padding: 0.875rem;
+  }
+  
+  .reminder-item-content {
+    gap: 0.625rem;
+  }
+  
+  .reminder-title {
+    font-size: 0.875rem;
+  }
+  
+  .reminder-description {
+    font-size: 0.8125rem;
+  }
+  
+  .reminder-actions {
+    margin-top: 0.5rem;
+    margin-left: 1.375rem; /* 对齐文字内容 */
+  }
+  
+  /* H5 下操作按钮移到下方 */
+  .reminder-item-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .reminder-details {
+    order: 1;
+  }
+  
+  .reminder-actions {
+    order: 2;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
 }

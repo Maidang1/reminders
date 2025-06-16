@@ -3,17 +3,19 @@ import React from 'react';
 interface FormFieldProps {
   label: string;
   children: React.ReactNode;
+  required?: boolean;
   className?: string;
 }
 
 export const FormField: React.FC<FormFieldProps> = ({
   label,
   children,
+  required = false,
   className = ''
 }) => {
   return (
-    <div className={className}>
-      <label className="block text-sm text-gray-400 mb-2">
+    <div className={`form-field ${className}`}>
+      <label className={`form-label ${required ? 'required' : ''}`}>
         {label}
       </label>
       {children}

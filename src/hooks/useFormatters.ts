@@ -13,5 +13,36 @@ export const useFormatters = () => {
     return new Date(timestamp * 1000).toLocaleString('zh-CN');
   }, []);
 
-  return { formatTime, formatDate };
+  const formatDateTime = useMemo(() => (timestamp: number) => {
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const reminderDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    const diffTime = reminderDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    const timeStr = date.toLocaleTimeString('zh-CN', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+    
+    if (diffDays === 0) {
+      return `今天 ${timeStr}`;
+    } else if (diffDays === 1) {
+      return `明天 ${timeStr}`;
+    } else if (diffDays === -1) {
+      return `昨天 ${timeStr}`;
+    } else if (diffDays > 1 && diffDays <= 7) {
+      const weekday = date.toLocaleDateString('zh-CN', { weekday: 'long' });
+      return `${weekday} ${timeStr}`;
+    } else {
+      return date.toLocaleDateString('zh-CN', { 
+        month: 'short', 
+        day: 'numeric' 
+      }) + ` ${timeStr}`;
+    }
+  }, []);
+
+  return { formatTime, formatDate, formatDateTime };
 };
