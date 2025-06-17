@@ -91,7 +91,7 @@ function App() {
           <div className='error-message'>{error}</div>
           <button
             onClick={loadData}
-            className='retry-button'
+            className="retry-button"
           >
             重试
           </button>
@@ -102,13 +102,18 @@ function App() {
 
   return (
     <div className='app-container'>
+      {/* Skip to content link for accessibility */}
+      <a href="#main-content" className="skip-to-content">
+        跳转到主要内容
+      </a>
+      
       {/* 主要内容区域 */}
-      <div className='main-content'>
+      <main id="main-content" className='main-content'>
         <ReminderList
           reminders={reminders}
           onCancelReminder={handleCancelReminder}
         />
-      </div>
+      </main>
 
       {/* 右下角添加按钮 */}
       <button

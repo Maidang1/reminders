@@ -1,248 +1,673 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
-/* Soft Poetry Theme inspired by the image */
 :root {
-  /* Apple-like System Colors */
-  --apple-blue: #007AFF;
-  --apple-green: #34C759;
-  --apple-orange: #FF9500;
-  --apple-red: #FF3B30;
-  --apple-purple: #AF52DE;
-  --apple-pink: #FF2D55;
-  --apple-teal: #5AC8FA;
-  --apple-yellow: #FFCC00;
+  /* Border radius */
+  --radius: 0.65rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
   
-  /* Apple-like gray scale */
-  --apple-gray-900: #1C1C1E;
-  --apple-gray-800: #2C2C2E;
-  --apple-gray-700: #3A3A3C;
-  --apple-gray-500: #8E8E93;
-  --apple-gray-300: #D1D1D6;
-  --apple-gray-100: #F5F5F7;
+  /* Core color scheme */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
   
-  /* Apple-like Theme Colors */
-  --main-bg: #F5F5F7;
-  --card-bg: #FFFFFF;
-  --text-primary: #1C1C1E;
-  --text-secondary: #3A3A3C;
-  --text-tertiary: #8E8E93;
-  --border-color: #E2E2E7;
-  --input-bg: #F5F5F7;
-  --add-button-bg: #007AFF;
-  --add-button-hover: #0066CC;
+  /* Primary colors */
+  --primary: oklch(0.606 0.25 292.717);
+  --primary-foreground: oklch(0.969 0.016 293.756);
+  --primary-hover: oklch(0.556 0.25 292.717);
   
-  /* Apple-like Border Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  /* Secondary colors */
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --secondary-hover: oklch(0.917 0.001 286.375);
+  
+  /* Muted colors */
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  
+  /* Accent colors */
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  
+  /* Status colors */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.969 0.016 293.756);
+  --success: oklch(0.6 0.158 164.47);
+  --success-foreground: oklch(0.969 0.016 293.756);
+  --warning: oklch(0.7 0.2 85);
+  --warning-foreground: oklch(0.141 0.005 285.823);
+  
+  /* Interactive elements */
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.606 0.25 292.717);
+  
+  /* Text hierarchy */
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-tertiary: oklch(0.7 0.01 286);
+  
+  /* Background variations */
+  --surface: var(--card);
+  --surface-hover: oklch(0.98 0.001 286.375);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.15);
+  
+  /* Sidebar specific */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.606 0.25 292.717);
+  --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.606 0.25 292.717);
 }
 
-/* App Container - 响应式布局 */
+.dark {
+  /* Core color scheme - dark mode */
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  
+  /* Primary colors - dark mode */
+  --primary: oklch(0.541 0.281 293.009);
+  --primary-foreground: oklch(0.969 0.016 293.756);
+  --primary-hover: oklch(0.491 0.281 293.009);
+  
+  /* Secondary colors - dark mode */
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --secondary-hover: oklch(0.324 0.006 286.033);
+  
+  /* Muted colors - dark mode */
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  
+  /* Accent colors - dark mode */
+  --accent: oklch(0.274 0.006 286.033);
+  --accent-foreground: oklch(0.985 0 0);
+  
+  /* Status colors - dark mode */
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.5 0.15 160);
+  --warning: oklch(0.7 0.2 85);
+  
+  /* Interactive elements - dark mode */
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.541 0.281 293.009);
+  
+  /* Text hierarchy - dark mode */
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --text-tertiary: oklch(0.6 0.01 286);
+  
+  /* Background variations - dark mode */
+  --surface: var(--card);
+  --surface-hover: oklch(0.24 0.006 285.885);
+  
+  /* Shadows - dark mode */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.4);
+  
+  /* Sidebar specific - dark mode */
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.541 0.281 293.009);
+  --sidebar-primary-foreground: oklch(0.969 0.016 293.756);
+  --sidebar-accent: oklch(0.274 0.006 286.033);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.541 0.281 293.009);
+}
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-feature-settings: 'kern' 1;
+  text-rendering: optimizeLegibility;
+}
+
 .app-container {
   min-height: 100vh;
-  background: var(--main-bg);
+  background: var(--background);
+  color: var(--foreground);
   position: relative;
   overflow-x: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Main Content */
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 0.75em;
+  letter-spacing: -0.025em;
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+p {
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* ===========================================
+   LAYOUT COMPONENTS
+   =========================================== */
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
 .main-content {
   width: 100%;
-  height: 100vh;
-  overflow-y: auto;
-  padding: 0;
-}
-
-/* Reminder List Container */
-.reminder-list-container {
   min-height: 100vh;
-  padding: 1rem;
+  padding: 1.5rem 0;
 }
 
-/* PC 样式 */
-@media (min-width: 768px) {
-  .reminder-list-container {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+/* ===========================================
+   CARD COMPONENTS
+   =========================================== */
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.reminder-list-content {
+.card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+/* ===========================================
+   BUTTON COMPONENTS
+   =========================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
+  outline: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--secondary-hover);
+  border-color: var(--primary);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-hover);
+  color: var(--primary);
+}
+
+.btn-destructive {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.btn-destructive:hover:not(:disabled) {
+  background-color: oklch(0.527 0.245 27.325);
+}
+
+/* Button sizes */
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+}
+
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+/* Icon buttons */
+.btn-icon {
+  padding: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.btn-icon-sm {
+  padding: 0.375rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+/* ===========================================
+   FORM COMPONENTS
+   =========================================== */
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: var(--destructive);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--surface);
+  background-clip: border-box;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none !important;
+}
+
+.form-control::placeholder {
+  color: var(--text-tertiary);
+  opacity: 1;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  /* box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.2); */
+  background-color: var(--background);
+}
+
+.form-control:disabled {
+  background-color: var(--muted);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+textarea.form-control {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Input variants */
+.form-control-sm {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.form-control-lg {
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+}
+
+/* Error states */
+.form-control.error {
+  border-color: var(--destructive);
+}
+
+.form-control.error:focus {
+  border-color: var(--destructive);
+  box-shadow: 0 0 0 3px oklch(from var(--destructive) l c h / 0.2);
+}
+
+.form-error {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--destructive);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-help {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+/* ===========================================
+   REMINDER COMPONENTS
+   =========================================== */
+
+.reminder-list-container {
   max-width: 100%;
+  padding: 1.5rem;
 }
 
-/* 页面标题 */
-.page-header {
+.reminder-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.reminder-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.reminder-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.reminder-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.reminder-item:hover::before {
+  transform: scaleX(1);
+}
+
+.reminder-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 0 0.5rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
 }
 
-.page-title {
-  font-size: 1.75rem;
-  font-weight: 700;
+.reminder-title {
+  font-weight: 600;
   color: var(--text-primary);
-  margin: 0;
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+  word-break: break-word;
 }
 
-/* H5 样式调整 */
-@media (max-width: 767px) {
-  .page-title {
-    font-size: 1.5rem;
-  }
-}
-
-.reminder-count {
-  font-size: 0.875rem;
+.reminder-meta {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
-  background: var(--card-bg);
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.1);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-/* 空状态 */
+.reminder-description {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.reminder-color-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  box-shadow: 0 0 0 2px var(--background);
+}
+
+.reminder-item-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.reminder-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-action-button {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reminder-action-button:hover {
+  background: var(--surface-hover);
+  color: var(--primary);
+  transform: scale(1.1);
+}
+
+.reminder-action-button:active {
+  transform: scale(0.95);
+}
+
+/* ===========================================
+   TIME SECTION & GROUPING
+   =========================================== */
+
+.time-section {
+  margin-bottom: 2.5rem;
+}
+
+.time-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-section-title::before {
+  content: '';
+  width: 4px;
+  height: 1.25rem;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+.reminders-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 1.5rem 0;
+}
+
+/* ===========================================
+   EMPTY & LOADING STATES
+   =========================================== */
+
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 4rem 2rem;
-  min-height: 60vh;
+  padding: 4rem 1rem;
+  min-height: 50vh;
 }
 
 .empty-icon {
-  width: 6rem;
-  height: 6rem;
-  background: rgba(0, 122, 255, 0.1);
+  width: 5rem;
+  height: 5rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  position: relative;
 }
 
-.empty-svg {
-  width: 3rem;
-  height: 3rem;
-  color: var(--apple-blue);
+.empty-icon::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, var(--primary), var(--accent));
+  z-index: -1;
+  opacity: 0.1;
 }
 
 .empty-title {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.75rem;
 }
 
 .empty-subtitle {
-  font-size: 1rem;
   color: var(--text-secondary);
-  margin: 0;
+  max-width: 32rem;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
 }
 
-/* H5 空状态调整 */
-@media (max-width: 767px) {
-  .empty-state {
-    padding: 3rem 1rem;
-    min-height: 50vh;
-  }
-  
-  .empty-icon {
-    width: 4rem;
-    height: 4rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .empty-svg {
-    width: 2rem;
-    height: 2rem;
-  }
-  
-  .empty-title {
-    font-size: 1.25rem;
-  }
-  
-  .empty-subtitle {
-    font-size: 0.875rem;
-  }
-}
-
-/* 提醒内容区域 */
-.reminders-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-/* 右下角添加按钮 */
-.add-button {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 3.5rem;
-  height: 3.5rem;
-  background: var(--add-button-bg);
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 30;
-}
-
-.add-button:hover {
-  background: var(--add-button-hover);
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.2);
-}
-
-.add-button:active {
-  transform: scale(0.95);
-}
-
-/* H5 添加按钮调整 */
-@media (max-width: 767px) {
-  .add-button {
-    bottom: 1rem;
-    right: 1rem;
-    width: 3rem;
-    height: 3rem;
-  }
-}
-
-.add-icon {
-  width: 1.5rem;
-  height: 1.5rem;
-  color: white;
-  stroke-width: 2.5;
-}
-
-/* H5 图标调整 */
-@media (max-width: 767px) {
-  .add-icon {
-    width: 1.25rem;
-    height: 1.25rem;
-  }
-}
-
-/* 加载状态 */
 .loading-state {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--main-bg);
+  background: var(--background);
 }
 
 .loading-content {
@@ -255,11 +680,11 @@
 .loading-spinner {
   width: 3rem;
   height: 3rem;
-  border: 3px solid var(--apple-gray-300);
-  border-top: 3px solid var(--apple-blue);
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1rem auto;
+  margin: 0 auto 1.5rem auto;
 }
 
 @keyframes spin {
@@ -279,13 +704,12 @@
   color: var(--text-secondary);
 }
 
-/* 错误状态 */
 .error-state {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--main-bg);
+  background: var(--background);
 }
 
 .error-content {
@@ -298,7 +722,7 @@
 .error-icon {
   width: 4rem;
   height: 4rem;
-  background: rgba(205, 145, 158, 0.2);
+  background: oklch(from var(--destructive) l c h / 0.1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -309,13 +733,13 @@
 .error-svg {
   width: 2rem;
   height: 2rem;
-  color: var(--apple-red);
+  color: var(--destructive);
 }
 
 .error-title {
   font-size: 1.125rem;
   font-weight: 600;
-  color: var(--apple-red);
+  color: var(--destructive);
   margin-bottom: 0.5rem;
 }
 
@@ -323,55 +747,76 @@
   font-size: 0.875rem;
   color: var(--text-secondary);
   margin-bottom: 1.5rem;
+  line-height: 1.5;
 }
 
-.retry-button {
-  background: var(--apple-blue);
-  color: white;
+/* ===========================================
+   FLOATING ACTION BUTTON
+   =========================================== */
+
+.add-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 500;
+  border-radius: 50%;
+  box-shadow: var(--shadow-lg);
   cursor: pointer;
-  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 50;
+  outline: none;
 }
 
-.retry-button:hover {
-  background: var(--add-button-hover);
+.add-button:hover {
+  background: var(--primary-hover);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 28px oklch(from var(--primary) l c h / 0.3);
 }
 
-.apple-section-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--apple-blue);
-  margin-bottom: 24px;
-  letter-spacing: -0.02em;
+.add-button:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: var(--shadow-md);
 }
 
-.apple-time-section {
-  margin-bottom: 32px;
+.add-button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
-.apple-time-header {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.add-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  stroke-width: 2.5;
+  transition: transform 0.2s ease;
 }
 
-/* Poetry App Form Styles */
-.apple-form-container {
-  background: rgba(44, 62, 80, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: var(--radius-xl);
+.add-button:hover .add-icon {
+  transform: rotate(90deg);
+}
+
+/* ===========================================
+   FORM CONTAINERS & COMPONENTS
+   =========================================== */
+
+.form-container {
+  background: var(--surface);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
   padding: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   transform: translateY(10px);
   opacity: 0;
-  animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
 @keyframes fadeInUp {
@@ -381,281 +826,293 @@
   }
 }
 
-.apple-input {
-  width: 100%;
-  background: var(--input-bg);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  color: var(--text-primary);
-  font-size: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.apple-input:focus {
-  outline: none;
-  border-color: var(--apple-blue);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-}
-
-.apple-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* 按钮样式 */
-.apple-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.apple-button-primary {
-  background: var(--apple-blue);
-  color: white;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
-}
-
-.apple-button-primary:hover {
-  background: var(--add-button-hover);
-  transform: translateY(-1px);
-}
-
-.apple-button-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.apple-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* 表单字段样式 */
 .form-field {
   margin-bottom: 1.5rem;
 }
 
-.form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.apple-input:focus + .form-label,
-.apple-input:not(:placeholder-shown) + .form-label {
-  color: var(--apple-blue);
-}
-
-.form-label.required::after {
-  content: " *";
-  color: var(--poetry-red);
-}
-
-/* 颜色选择器样式 */
+/* Color Picker Component */
 .color-picker {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .color-option {
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   border-radius: 50%;
   border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .color-option:hover {
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .color-option.selected {
-  border-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  border-color: var(--ring);
+  transform: scale(1.1);
+  box-shadow: 0 0 0 3px oklch(from var(--ring) l c h / 0.2);
 }
 
 .color-option.selected::after {
-  content: "✓";
+  content: '✓';
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* 响应式调整 - H5 */
+/* Section Headers */
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.025em;
+}
+
+.section-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===========================================
+   MODAL & OVERLAY COMPONENTS
+   =========================================== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: oklch(0 0 0 / 0.5);
+  z-index: 40;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
+}
+
+.modal-backdrop.entering {
+  opacity: 0;
+}
+
+.modal-backdrop.entered {
+  opacity: 1;
+}
+
+.modal-backdrop.exiting {
+  opacity: 0;
+}
+
+.modal-panel {
+  position: fixed;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  background: oklch(from var(--surface) l c h / 0.95);
+  color: var(--text-primary);
+}
+
+.modal-panel-mobile {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  border-bottom: none;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-panel-mobile.entering {
+  transform: translateY(100%);
+}
+
+.modal-panel-mobile.entered {
+  transform: translateY(0);
+}
+
+.modal-panel-mobile.exiting {
+  transform: translateY(100%);
+}
+
+.modal-panel-desktop {
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 100%;
+  max-width: 28rem;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  border-radius: 0;
+}
+
+.modal-panel-desktop.entering {
+  transform: translateX(100%);
+}
+
+.modal-panel-desktop.entered {
+  transform: translateX(0);
+}
+
+.modal-panel-desktop.exiting {
+  transform: translateX(100%);
+}
+
+.modal-handle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  padding-top: 0.5rem;
+}
+
+.modal-handle-bar {
+  width: 3rem;
+  height: 0.375rem;
+  background: var(--border);
+  border-radius: var(--radius);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close-button {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--muted);
+  border: none;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.modal-close-button:hover {
+  background: var(--accent);
+  color: var(--text-secondary);
+  transform: scale(1.05);
+}
+
+.modal-content {
+  position: relative;
+  height: 100%;
+  padding: 1.5rem;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.modal-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+  max-height: 60vh;
+  padding-right: 0.5rem;
+  margin-right: -0.5rem;
+  flex: 1;
+}
+
+.modal-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+/* ===========================================
+   SCROLLBAR STYLING
+   =========================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+  border-radius: var(--radius);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--muted);
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+/* Mobile styles */
 @media (max-width: 767px) {
-  .apple-form-container {
-    padding: 1.5rem;
-    margin: 1rem;
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  .main-content {
+    padding: 1rem 0;
+  }
+  
+  .reminder-list {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .reminder-list-container {
+    padding: 1rem;
+  }
+  
+  .reminder-item {
+    padding: 1rem;
     border-radius: var(--radius-lg);
   }
   
-  .apple-input {
-    padding: 0.875rem 1rem;
-    font-size: 1rem; /* H5 输入框字体稍大 */
-  }
-  
-  .apple-button {
-    padding: 0.875rem 1.5rem;
-    font-size: 1rem;
-  }
-  
-  .color-option {
-    width: 2.5rem;
-    height: 2.5rem;
-  }
-}
-
-/* 滚动条样式 */
-.apple-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.apple-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-/* 时间段样式 */
-.time-section {
-  margin-bottom: 2rem;
-}
-
-.time-section-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  padding: 0 0.5rem;
-}
-
-/* 提醒项样式 */
-.reminder-item {
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: var(--radius-lg);
-  margin: 0 0.5rem 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.reminder-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.reminder-item-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.reminder-color-dot {
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.reminder-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.reminder-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.25rem;
-  word-wrap: break-word;
-}
-
-.reminder-description {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  word-wrap: break-word;
-}
-
-.reminder-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.reminder-action-button {
-  padding: 0.5rem;
-  border: none;
-  background: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  color: var(--text-tertiary);
-}
-
-.reminder-action-button:hover {
-  background: rgba(0, 122, 255, 0.1);
-  color: var(--poetry-blue);
-}
-
-/* H5 提醒项调整 */
-@media (max-width: 767px) {
-  .reminder-item {
-    padding: 0.875rem;
-  }
-  
-  .reminder-item-content {
-    gap: 0.625rem;
-  }
-  
-  .reminder-title {
-    font-size: 0.875rem;
-  }
-  
-  .reminder-description {
-    font-size: 0.8125rem;
-  }
-  
-  .reminder-actions {
-    margin-top: 0.5rem;
-    margin-left: 1.375rem; /* 对齐文字内容 */
-  }
-  
-  /* H5 下操作按钮移到下方 */
   .reminder-item-content {
     flex-direction: column;
-    align-items: stretch;
+    gap: 0.75rem;
   }
   
   .reminder-details {
@@ -664,7 +1121,373 @@
   
   .reminder-actions {
     order: 2;
-    margin-left: 0;
     justify-content: flex-end;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
   }
+  
+  .add-button {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 3.5rem;
+    height: 3.5rem;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .add-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  
+  .modal-content {
+    padding: 1.5rem;
+  }
+  
+  .form-control {
+    padding: 0.875rem 1rem;
+    font-size: 1rem; /* Prevent zoom on iOS */
+    border-radius: var(--radius-lg);
+  }
+  
+  .btn {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    border-radius: var(--radius-lg);
+    min-height: 48px; /* Touch target */
+  }
+  
+  .color-option {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .page-title {
+    font-size: 1.75rem;
+  }
+  
+  .page-header {
+    margin-bottom: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
+  .reminder-count {
+    align-self: stretch;
+    text-align: center;
+  }
+  
+  /* Improve touch interactions */
+  .reminder-action-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .modal-close-button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  
+  /* Optimize animations for mobile */
+  .reminder-item {
+    animation-duration: 0.2s;
+  }
+  
+  .modal-panel-mobile {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    max-height: 90vh;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .reminder-list {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .reminder-list {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  
+  .empty-state {
+    padding: 4rem 2rem;
+  }
+}
+
+/* Large desktop styles */
+@media (min-width: 1440px) {
+  .container {
+    max-width: 1400px;
+  }
+  
+  .reminder-list {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+/* ===========================================
+   ACCESSIBILITY & INTERACTION STATES
+   =========================================== */
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode adjustments */
+@media (prefers-contrast: high) {
+  .btn {
+    border-width: 2px;
+  }
+  
+  .form-control {
+    border-width: 2px;
+  }
+  
+  .card {
+    border-width: 2px;
+  }
+}
+
+/* Focus indicators */
+.focusable:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Selection styles */
+::selection {
+  background-color: oklch(from var(--primary) l c h / 0.2);
+  color: var(--text-primary);
+}
+
+/* Print styles */
+@media print {
+  .add-button,
+  .reminder-actions,
+  .modal-backdrop,
+  .modal-panel {
+    display: none !important;
+  }
+  
+  .reminder-item {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    margin-bottom: 1rem;
+  }
+  
+  .page-title {
+    color: #000 !important;
+  }
+  
+  .time-section-title {
+    color: #000 !important;
+    border-bottom: 1px solid #000;
+    padding-bottom: 0.5rem;
+  }
+  
+  .reminder-title {
+    color: #000 !important;
+    font-weight: bold;
+  }
+  
+  .reminder-description {
+    color: #333 !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* ===========================================
+   DARK MODE ENHANCEMENTS
+   =========================================== */
+
+.dark .modal-backdrop {
+  background: oklch(0 0 0 / 0.7);
+}
+
+.dark .modal-panel {
+  background: oklch(from var(--surface) l c h / 0.95);
+  border-color: var(--border);
+}
+
+.dark .loading-spinner {
+  border-color: var(--border);
+  border-top-color: var(--primary);
+}
+
+.dark .reminder-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+  background: var(--surface-hover);
+}
+
+.dark .add-button {
+  box-shadow: 0 8px 25px oklch(0 0 0 / 0.3);
+}
+
+.dark .add-button:hover {
+  box-shadow: 0 12px 30px oklch(from var(--primary) l c h / 0.4);
+}
+
+.dark .card:hover {
+  box-shadow: var(--shadow-md);
+  background: var(--surface-hover);
+}
+
+.dark .btn:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .form-control:focus {
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(from var(--primary) l c h / 0.2);
+}
+
+.dark .empty-icon::after {
+  background: linear-gradient(45deg, oklch(from var(--primary) l c h / 0.1), oklch(from var(--accent) l c h / 0.1));
+}
+
+/* High contrast mode for dark theme */
+.dark .reminder-color-dot {
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.dark .color-option.selected {
+  box-shadow: 0 0 0 3px oklch(from var(--ring) l c h / 0.3);
+}
+
+/* ===========================================
+   ACCESSIBILITY IMPROVEMENTS
+   =========================================== */
+
+/* Focus improvements for better accessibility */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Skip to content link */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 8px;
+  text-decoration: none;
+  border-radius: var(--radius);
+  z-index: 100;
+  transition: top 0.3s ease;
+}
+
+.skip-to-content:focus {
+  top: 6px;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .btn {
+    border-width: 2px;
+    border-style: solid;
+  }
+  
+  .form-control {
+    border-width: 2px;
+  }
+  
+  .card {
+    border-width: 2px;
+  }
+  
+  .reminder-item {
+    border-width: 2px;
+  }
+  
+  .modal-panel {
+    border-width: 3px;
+  }
+}
+
+/* ===========================================
+   PERFORMANCE OPTIMIZATIONS
+   =========================================== */
+
+/* GPU acceleration for smooth animations */
+.add-button,
+.reminder-item,
+.modal-panel,
+.btn {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Optimize repaints */
+.reminder-color-dot,
+.color-option,
+.loading-spinner {
+  contain: layout style paint;
+}
+
+/* ===========================================
+   PAGE LAYOUT & HEADER
+   =========================================== */
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.reminder-count {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  background: var(--muted);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-weight: 500;
+}
+
+.reminder-list-content {
+  max-width: 100%;
+}
+
+.reminders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }

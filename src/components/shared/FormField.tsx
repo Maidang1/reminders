@@ -11,14 +11,14 @@ export const FormField: React.FC<FormFieldProps> = ({
   label,
   children,
   required = false,
-  className = ''
+  className = '',
 }) => {
   return (
-    <div className={`form-field ${className}`}>
+    <div className={`form-field px-2 ${className}`}>
       <label className={`form-label ${required ? 'required' : ''}`}>
         {label}
       </label>
-      {children}
+      <div className='px-2'>{children}</div>
     </div>
   );
 };
