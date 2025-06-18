@@ -1,4 +1,5 @@
 use crate::store::Reminder;
+use crate::utils::get_current_time;
 use english_to_cron::str_cron_syntax;
 use job_scheduler_ng::{Job, JobScheduler};
 use std::collections::HashMap;
@@ -63,11 +64,7 @@ impl ReminderScheduler {
     pub async fn add_reminder_job(&mut self, reminder: &Reminder) -> Result<(), String> {
         let reminder_id = reminder.id.clone();
         let reminder_title = reminder.title.clone();
-        let start_at = reminder.start_at;
-        let cron_expression = &reminder
-            .cron_expression
-            .clone()
-            .unwrap_or(format!("Run only at once on {}", start_at).to_string());
+        let cron_expression = reminder.cron_expression.clone().unwrap();
 
         // 创建定时任务
         let cron_expr = str_cron_syntax(&cron_expression)
@@ -98,6 +95,44 @@ impl ReminderScheduler {
                                 current_reminder.title
                             );
                             return;
+                        }
+
+                        let (hour, minutes) = get_current_time();
+
+                        let now = chrono::NaiveTime::parse_from_str(
+                            format!("{}:{}", hour, minutes).as_str(),
+                            "%H:%M",
+                        )
+                        .ok();
+
+                        if let Some(end_at) = &current_reminder.end_at {
+                            let end_time = chrono::NaiveTime::parse_from_str(&end_at, "%H:%M").ok();
+
+                            if end_time.is_some()
+                                && now.is_some()
+                                && now.unwrap() > end_time.unwrap()
+                            {
+                                println!(
+                                    "Reminder {} has ended, skipping notification",
+                                    current_reminder.title
+                                );
+                                return;
+                            }
+                        }
+
+                        if let Some(start_at) = &current_reminder.start_at {
+                            let start_time =
+                                chrono::NaiveTime::parse_from_str(&start_at, "%H:%M").ok();
+                            if start_time.is_some()
+                                && now.is_some()
+                                && now.unwrap() < start_time.unwrap()
+                            {
+                                println!(
+                                    "Reminder {} has not started yet, skipping notification",
+                                    current_reminder.title
+                                );
+                                return;
+                            }
                         }
 
                         // 发送通知
@@ -190,11 +225,30 @@ impl ReminderScheduler {
 
     /// 恢复所有活跃的提醒任务
     pub async fn restore_reminder_jobs(&mut self, reminders: &[Reminder]) -> Result<(), String> {
-        let now = chrono::Utc::now().timestamp();
+        let (hour, minutes) = get_current_time();
+
+        let now =
+            chrono::NaiveTime::parse_from_str(format!("{}:{}", hour, minutes).as_str(), "%H:%M")
+                .ok();
 
         for reminder in reminders {
             // 只恢复未取消且未过期的提醒
-            if !reminder.is_cancelled && !reminder.is_paused && now < reminder.start_at as i64 {
+            if !reminder.is_cancelled && !reminder.is_paused {
+                let end_at = if let Some(end_at) = reminder.end_at.clone() {
+                    chrono::NaiveTime::parse_from_str(&end_at, "%H:%M").ok()
+                } else {
+                    None
+                };
+
+                if end_at.is_some() && end_at.unwrap() > now.unwrap() {
+                    println!(
+                        "Skipping reminder {} as it has already ended at {}",
+                        reminder.title,
+                        end_at.unwrap()
+                    );
+                    continue;
+                }
+
                 if let Err(e) = self.add_reminder_job(reminder).await {
                     eprintln!(
                         "Failed to restore reminder job for {}: {}",

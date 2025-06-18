@@ -25,6 +25,8 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
     group_id: 'default', // 由于去掉了分组，使用默认值
     cron_expression: '',
     description: '',
+    startTime: undefined,
+    endTime: undefined,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -36,6 +38,8 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
         group_id: 'default',
         cron_expression: formData.cron_expression || undefined,
         description: formData.description || undefined,
+        startTime: formData.startTime || undefined,
+        endTime: formData.endTime || undefined,
       });
       resetForm({
         title: '',
@@ -43,6 +47,8 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
         group_id: 'default',
         cron_expression: '',
         description: '',
+        startTime: undefined,
+        endTime: undefined,
       });
       onClose();
     }
@@ -55,6 +61,8 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
       group_id: 'default',
       cron_expression: '',
       description: '',
+      startTime: undefined,
+      endTime: undefined,
     });
     onClose();
   };
@@ -162,6 +170,34 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
                 <div className='form-help'>
                   使用英语表述重复提醒，例如："every 15
                   seconds"，留空则为一次性提醒
+                </div>
+              </FormField>
+              <FormField label='开始时间点'>
+                <Input
+                  type='text'
+                  value={formData.startTime}
+                  onChange={(e) =>
+                    // @ts-ignore
+                    updateFormData({ startTime: e.target.value })
+                  }
+                  placeholder='8:00'
+                />
+                <div className='form-help'>
+                  可选，设置提醒的开始时间，例如 "8:00"
+                </div>
+              </FormField>
+              <FormField label='结束时间点'>
+                <Input
+                  type='text'
+                  value={formData.endTime}
+                  onChange={(e) =>
+                    // @ts-ignore
+                    updateFormData({ endTime: e.target.value })
+                  }
+                  placeholder='9:00'
+                />
+                <div className='form-help'>
+                  可选，设置提醒的结束时间，例如 "9:00"
                 </div>
               </FormField>
             </div>

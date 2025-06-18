@@ -28,6 +28,8 @@ export const useReminderAPI = () => {
       groupId: data.group_id,
       cronExpression: data.cron_expression,
       description: data.description,
+      startAt: data.startTime,
+      endAt: data.endTime,
     });
   };
 

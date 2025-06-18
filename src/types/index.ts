@@ -18,6 +18,8 @@ export interface CreateReminderData {
   group_id: string; // 保留，但使用默认值
   cron_expression?: string;
   description?: string;
+  startTime?: string; // 用于选择开始时间
+  endTime?: string; // 用于选择结束时间
 }
 
 // 保留分组接口以兼容现有API，但在UI中不使用
