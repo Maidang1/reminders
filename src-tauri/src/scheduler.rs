@@ -1,10 +1,12 @@
-use crate::store::Reminder;
+use crate::error::{AppError, AppResult};
+use crate::models::Reminder;
+use crate::repository::DataRepository;
 use crate::utils::get_current_time;
 use english_to_cron::str_cron_syntax;
 use job_scheduler_ng::{Job, JobScheduler};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::sync::{Arc, Mutex, RwLock};
+use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
@@ -33,6 +35,7 @@ impl SendSyncJobScheduler {
         self.scheduler.tick();
     }
 }
+
 impl Debug for SendSyncJobScheduler {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SendSyncJobScheduler").finish()
@@ -47,141 +50,125 @@ pub struct ReminderScheduler {
     scheduler: Arc<Mutex<SendSyncJobScheduler>>,
     job_ids: Arc<Mutex<HashMap<String, uuid::Uuid>>>,
     app_handle: AppHandle,
-    reminders: Arc<RwLock<Vec<Reminder>>>,
+    repository: Arc<dyn DataRepository>,
 }
 
 impl ReminderScheduler {
-    pub fn new(app_handle: AppHandle, reminders: Arc<RwLock<Vec<Reminder>>>) -> Self {
+    pub fn new(app_handle: AppHandle, repository: Arc<dyn DataRepository>) -> Self {
         Self {
             scheduler: Arc::new(Mutex::new(SendSyncJobScheduler::new())),
             job_ids: Arc::new(Mutex::new(HashMap::new())),
             app_handle,
-            reminders,
+            repository,
         }
     }
 
     /// 添加新的提醒任务
-    pub async fn add_reminder_job(&mut self, reminder: &Reminder) -> Result<(), String> {
+    pub async fn add_reminder_job(&mut self, reminder: &Reminder) -> AppResult<()> {
+        let cron_expression = reminder.cron_expression.as_ref()
+            .ok_or_else(|| AppError::Validation("Cron expression is required".to_string()))?;
+
         let reminder_id = reminder.id.clone();
         let reminder_title = reminder.title.clone();
-        let cron_expression = reminder.cron_expression.clone().unwrap();
 
         // 创建定时任务
-        let cron_expr = str_cron_syntax(&cron_expression)
-            .map_err(|e| format!("Invalid cron expression2: {}", e))?;
+        let cron_expr = str_cron_syntax(cron_expression)
+            .map_err(|e| AppError::Scheduler(format!("Invalid cron expression: {}", e)))?;
 
         let app_handle = self.app_handle.clone();
         let title_clone = reminder_title.clone();
-        let reminders_ref = Arc::clone(&self.reminders);
+        let repository = Arc::clone(&self.repository);
         let reminder_id_clone = reminder_id.clone();
 
         let job = Job::new(
             cron_expr
                 .parse()
-                .map_err(|e| format!("Invalid cron expression1: {}", e))?,
+                .map_err(|e| AppError::Scheduler(format!("Invalid cron expression: {}", e)))?,
             move || {
                 // 实时检查 reminder 状态
-                if let Ok(reminders) = reminders_ref.read() {
-                    if let Some(current_reminder) =
-                        reminders.iter().find(|r| r.id == reminder_id_clone)
-                    {
-                        // 检查 reminder 是否被取消、暂停或删除
-                        if current_reminder.is_cancelled
-                            || current_reminder.is_paused
-                            || current_reminder.is_deleted
+                if let Ok(Some(current_reminder)) = repository.find_reminder(&reminder_id_clone) {
+                    // 检查 reminder 是否处于活跃状态
+                    if !current_reminder.is_active() {
+                        println!(
+                            "Reminder {} is not active, skipping notification",
+                            current_reminder.title
+                        );
+                        return;
+                    }
+
+                    let (hour, minutes) = get_current_time();
+                    let now = chrono::NaiveTime::parse_from_str(
+                        format!("{}:{}", hour, minutes).as_str(),
+                        "%H:%M",
+                    )
+                    .ok();
+
+                    // 检查结束时间
+                    if let Some(end_at) = &current_reminder.end_at {
+                        let end_time = chrono::NaiveTime::parse_from_str(end_at, "%H:%M").ok();
+                        if end_time.is_some()
+                            && now.is_some()
+                            && now.unwrap() > end_time.unwrap()
                         {
                             println!(
-                                "Reminder {} is cancelled/paused/deleted, skipping notification",
+                                "Reminder {} has ended, skipping notification",
                                 current_reminder.title
                             );
                             return;
                         }
+                    }
 
-                        let (hour, minutes) = get_current_time();
-
-                        let now = chrono::NaiveTime::parse_from_str(
-                            format!("{}:{}", hour, minutes).as_str(),
-                            "%H:%M",
-                        )
-                        .ok();
-
-                        if let Some(end_at) = &current_reminder.end_at {
-                            let end_time = chrono::NaiveTime::parse_from_str(&end_at, "%H:%M").ok();
-
-                            if end_time.is_some()
-                                && now.is_some()
-                                && now.unwrap() > end_time.unwrap()
-                            {
-                                println!(
-                                    "Reminder {} has ended, skipping notification",
-                                    current_reminder.title
-                                );
-                                return;
-                            }
+                    // 检查开始时间
+                    if let Some(start_at) = &current_reminder.start_at {
+                        let start_time =
+                            chrono::NaiveTime::parse_from_str(start_at, "%H:%M").ok();
+                        if start_time.is_some()
+                            && now.is_some()
+                            && now.unwrap() < start_time.unwrap()
+                        {
+                            println!(
+                                "Reminder {} has not started yet, skipping notification",
+                                current_reminder.title
+                            );
+                            return;
                         }
+                    }
 
-                        if let Some(start_at) = &current_reminder.start_at {
-                            let start_time =
-                                chrono::NaiveTime::parse_from_str(&start_at, "%H:%M").ok();
-                            if start_time.is_some()
-                                && now.is_some()
-                                && now.unwrap() < start_time.unwrap()
-                            {
-                                println!(
-                                    "Reminder {} has not started yet, skipping notification",
-                                    current_reminder.title
-                                );
-                                return;
-                            }
-                        }
+                    // 发送通知
+                    if let Err(e) = Self::send_notification_sync_internal(
+                        &app_handle,
+                        &title_clone,
+                    ) {
+                        eprintln!("Failed to send notification: {}", e);
+                    }
 
-                        // 发送通知
-                        if let Err(e) = ReminderScheduler::send_notification_sync_internal(
-                            &app_handle,
-                            &title_clone,
-                        ) {
-                            eprintln!("Failed to send notification: {}", e);
-                        }
-
-                        // 更新 last_triggered 时间
-                        drop(reminders); // 释放读锁
-                        if let Ok(mut reminders_write) = reminders_ref.write() {
-                            if let Some(reminder_to_update) = reminders_write
-                                .iter_mut()
-                                .find(|r| r.id == reminder_id_clone)
-                            {
-                                reminder_to_update.last_triggered =
-                                    Some(chrono::Utc::now().timestamp());
-                            }
-                        }
-                    } else {
-                        println!(
-                            "Reminder {} not found, skipping notification",
-                            reminder_id_clone
-                        );
+                    // 更新 last_triggered 时间
+                    let mut updated_reminder = current_reminder.clone();
+                    updated_reminder.update_last_triggered();
+                    if let Err(e) = repository.update_reminder(&updated_reminder) {
+                        eprintln!("Failed to update reminder last_triggered: {}", e);
                     }
                 } else {
-                    eprintln!(
-                        "Failed to read reminders for reminder {}",
+                    println!(
+                        "Reminder {} not found, skipping notification",
                         reminder_id_clone
                     );
                 }
             },
         );
 
-        // Store the job ID
-
+        // 存储任务ID
         let mut scheduler = self
             .scheduler
             .lock()
-            .map_err(|e| format!("Failed to lock scheduler: {}", e))?;
+            .map_err(|e| AppError::Internal(format!("Failed to lock scheduler: {}", e)))?;
 
         let job_id = scheduler.add(job);
 
         let mut job_ids = self
             .job_ids
             .lock()
-            .map_err(|e| format!("Failed to lock job_ids: {}", e))?;
+            .map_err(|e| AppError::Internal(format!("Failed to lock job_ids: {}", e)))?;
 
         job_ids.insert(reminder.id.clone(), job_id);
 
@@ -189,17 +176,17 @@ impl ReminderScheduler {
     }
 
     /// 移除提醒任务
-    pub fn remove_reminder_job(&self, reminder_id: &str) -> Result<(), String> {
+    pub fn remove_reminder_job(&self, reminder_id: &str) -> AppResult<()> {
         let mut job_ids = self
             .job_ids
             .lock()
-            .map_err(|e| format!("Failed to lock job_ids: {}", e))?;
+            .map_err(|e| AppError::Internal(format!("Failed to lock job_ids: {}", e)))?;
 
         if let Some(job_id) = job_ids.remove(reminder_id) {
             let mut scheduler = self
                 .scheduler
                 .lock()
-                .map_err(|e| format!("Failed to lock scheduler: {}", e))?;
+                .map_err(|e| AppError::Internal(format!("Failed to lock scheduler: {}", e)))?;
             scheduler.remove(job_id);
             println!("Removed reminder job for: {}", reminder_id);
         } else {
@@ -210,21 +197,21 @@ impl ReminderScheduler {
     }
 
     /// 内部使用的发送通知方法
-    fn send_notification_sync_internal(app_handle: &AppHandle, title: &str) -> Result<(), String> {
+    fn send_notification_sync_internal(app_handle: &AppHandle, title: &str) -> AppResult<()> {
         app_handle
             .notification()
             .builder()
             .title("提醒")
             .body(title)
             .show()
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| AppError::Scheduler(format!("Failed to send notification: {}", e)))?;
 
         println!("Sent notification: {}", title);
         Ok(())
     }
 
     /// 恢复所有活跃的提醒任务
-    pub async fn restore_reminder_jobs(&mut self, reminders: &[Reminder]) -> Result<(), String> {
+    pub async fn restore_reminder_jobs(&mut self, reminders: &[Reminder]) -> AppResult<()> {
         let (hour, minutes) = get_current_time();
 
         let now =
@@ -232,21 +219,23 @@ impl ReminderScheduler {
                 .ok();
 
         for reminder in reminders {
-            // 只恢复未取消且未过期的提醒
-            if !reminder.is_cancelled && !reminder.is_paused {
+            // 只恢复活跃的提醒
+            if reminder.is_active() {
                 let end_at = if let Some(end_at) = reminder.end_at.clone() {
                     chrono::NaiveTime::parse_from_str(&end_at, "%H:%M").ok()
                 } else {
                     None
                 };
 
-                if end_at.is_some() && end_at.unwrap() > now.unwrap() {
-                    println!(
-                        "Skipping reminder {} as it has already ended at {}",
-                        reminder.title,
-                        end_at.unwrap()
-                    );
-                    continue;
+                // 如果提醒已经结束，跳过
+                if let (Some(end_time), Some(current_time)) = (end_at, now) {
+                    if end_time <= current_time {
+                        println!(
+                            "Skipping reminder {} as it has already ended at {}",
+                            reminder.title, end_time
+                        );
+                        continue;
+                    }
                 }
 
                 if let Err(e) = self.add_reminder_job(reminder).await {
@@ -258,7 +247,7 @@ impl ReminderScheduler {
             }
         }
 
-        println!("Restored {} reminder jobs", reminders.len());
+        println!("Restored reminder jobs for {} reminders", reminders.len());
         Ok(())
     }
 
@@ -280,7 +269,7 @@ impl Clone for ReminderScheduler {
             scheduler: Arc::clone(&self.scheduler),
             job_ids: Arc::clone(&self.job_ids),
             app_handle: self.app_handle.clone(),
-            reminders: Arc::clone(&self.reminders),
+            repository: Arc::clone(&self.repository),
         }
     }
 }
