@@ -11,7 +11,7 @@ use repository::{InMemoryRepository, PersistenceManager};
 use scheduler::ReminderScheduler;
 use service::ReminderService;
 use std::sync::Arc;
-use tauri::Manager;
+use tauri::{tray::{TrayIconBuilder, TrayIconEvent}, menu::{MenuBuilder, MenuItemBuilder}, Manager, WindowEvent};
 use tokio::sync::RwLock;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -48,6 +48,70 @@ pub fn run() {
             // 创建应用状态
             let app_state = AppState { service: Arc::clone(&service) };
             app.manage(app_state);
+
+            // 创建托盘菜单
+            let show_item = MenuItemBuilder::with_id("show", "显示窗口").build(app)?;
+            let hide_item = MenuItemBuilder::with_id("hide", "隐藏窗口").build(app)?;
+            let quit_item = MenuItemBuilder::with_id("quit", "退出应用").build(app)?;
+            
+            let menu = MenuBuilder::new(app)
+                .items(&[&show_item, &hide_item])
+                .separator()
+                .item(&quit_item)
+                .build()?;
+
+            // 创建托盘图标
+            let _tray = TrayIconBuilder::with_id("main")
+                .tooltip("Reminders App")
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_tray_icon_event(|tray, event| {
+                    match event {
+                        TrayIconEvent::Click { 
+                            button: tauri::tray::MouseButton::Left,
+                            button_state: tauri::tray::MouseButtonState::Up,
+                            ..
+                        } => {
+                            let app = tray.app_handle();
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = if window.is_visible().unwrap_or(false) {
+                                    window.hide()
+                                } else {
+                                    window.show().and_then(|_| window.set_focus())
+                                };
+                            }
+                        }
+                        _ => {}
+                    }
+                })
+                .on_menu_event(|app, event| {
+                    match event.id.as_ref() {
+                        "show" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show().and_then(|_| window.set_focus());
+                            }
+                        }
+                        "hide" => {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.hide();
+                            }
+                        }
+                        "quit" => {
+                            // 真正退出应用
+                            let app_state = app.state::<AppState>();
+                            let service = Arc::clone(&app_state.service);
+                            let rt = tokio::runtime::Runtime::new().unwrap();
+                            rt.block_on(async {
+                                if let Err(e) = save_on_exit(&service).await {
+                                    eprintln!("Failed to save data on exit: {}", e);
+                                }
+                            });
+                            app.exit(0);
+                        }
+                        _ => {}
+                    }
+                })
+                .build(app)?;
 
             // 在新线程中启动调度器和恢复任务
             let scheduler_clone = Arc::clone(&scheduler);
@@ -88,17 +152,13 @@ pub fn run() {
             commands::delete_reminder,
         ])
         .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { .. } = event {
-                let app_state = window.state::<AppState>();
-                
-                // 同步保存数据
-                let service = Arc::clone(&app_state.service);
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                rt.block_on(async {
-                    if let Err(e) = save_on_exit(&service).await {
-                        eprintln!("Failed to save data on exit: {}", e);
-                    }
-                });
+            match event {
+                WindowEvent::CloseRequested { api, .. } => {
+                    // 阻止窗口关闭，改为隐藏到托盘
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+                _ => {}
             }
         })
         .run(tauri::generate_context!())
