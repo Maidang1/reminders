@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useReminderAPI } from './hooks/useReminderAPI';
 import { Reminder, CreateReminderData } from './types';
 import { ReminderList } from './components/ReminderList';
-// import { AddReminderPanel } from './components/AddReminderPanel';
 import './App.css';
 import { AddReminderPanel } from './components/AddReminderPanel';
 
