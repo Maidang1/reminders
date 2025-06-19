@@ -49,7 +49,7 @@ pub fn run() {
             let app_state = AppState { service: Arc::clone(&service) };
             app.manage(app_state);
 
-            // 创建托盘菜单
+            // // 创建托盘菜单
             let show_item = MenuItemBuilder::with_id("show", "显示窗口").build(app)?;
             let hide_item = MenuItemBuilder::with_id("hide", "隐藏窗口").build(app)?;
             let quit_item = MenuItemBuilder::with_id("quit", "退出应用").build(app)?;

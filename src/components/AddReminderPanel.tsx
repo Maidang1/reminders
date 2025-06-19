@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { CreateReminderData } from '../types';
-import { COLOR_OPTIONS } from '../constants/options';
+import { COLOR_OPTIONS, PRESETS_TIME_OPTIONS } from '../constants/options';
 import { useFormState } from '../hooks/useFormState';
 import { FormField } from './shared/FormField';
 import useMediaQuery from '@/hooks/useMediaQuery';
@@ -173,29 +173,37 @@ export const AddReminderPanel: React.FC<AddReminderPanelProps> = ({
                 </div>
               </FormField>
               <FormField label='开始时间点'>
-                <Input
-                  type='text'
-                  value={formData.startTime}
+                <select
+                  defaultValue={formData.startTime}
                   onChange={(e) =>
                     // @ts-ignore
                     updateFormData({ startTime: e.target.value })
                   }
-                  placeholder='8:00'
-                />
+                >
+                  {PRESETS_TIME_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 <div className='form-help'>
                   可选，设置提醒的开始时间，例如 "8:00"
                 </div>
               </FormField>
               <FormField label='结束时间点'>
-                <Input
-                  type='text'
-                  value={formData.endTime}
+                <select
+                  defaultValue={formData.endTime}
                   onChange={(e) =>
                     // @ts-ignore
                     updateFormData({ endTime: e.target.value })
                   }
-                  placeholder='9:00'
-                />
+                >
+                  {PRESETS_TIME_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 <div className='form-help'>
                   可选，设置提醒的结束时间，例如 "9:00"
                 </div>
